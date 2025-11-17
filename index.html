@@ -144,14 +144,23 @@
         }
         
         .btn-time.disabled {
-            background: rgba(156, 163, 175, 0.3);
-            color: #9ca3af;
+            background: rgba(239, 68, 68, 0.2);
+            color: #dc2626;
             cursor: not-allowed;
+            position: relative;
         }
         
         .btn-time.disabled:hover {
-            background: rgba(156, 163, 175, 0.3);
+            background: rgba(239, 68, 68, 0.2);
             transform: none;
+        }
+        
+        .btn-time.disabled::after {
+            content: '✕';
+            position: absolute;
+            top: 2px;
+            right: 4px;
+            font-size: 10px;
         }
         
         .btn-submit {
@@ -228,14 +237,25 @@
             display: none;
         }
 
-        .debug-info {
-            background: #fef3c7;
-            border: 1px solid #fbbf24;
-            border-radius: 8px;
-            padding: 12px;
-            margin-top: 16px;
-            font-size: 12px;
-            color: #92400e;
+        .loading {
+            text-align: center;
+            padding: 16px;
+            color: #6b7280;
+        }
+
+        .spinner {
+            border: 3px solid #f3f4f6;
+            border-top: 3px solid #9333ea;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 8px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
     </style>
 </head>
@@ -267,7 +287,7 @@
                         <span class="label-icon">📞</span>
                         Телефон
                     </label>
-                    <input type="tel" id="phoneInput" placeholder="+7 (999) 123-45-67">
+                    <input type="tel" id="phoneInput" placeholder="+7 (999) 123-45-67" value="+7 ">
                 </div>
                 
                 <div class="form-group">
@@ -283,18 +303,17 @@
                         <span class="label-icon">🕐</span>
                         Выберите время
                     </label>
-                    <div id="timesGrid" class="grid-3"></div>
+                    <div id="timesGrid" class="grid-3">
+                        <div class="loading">
+                            <div class="spinner"></div>
+                            <p>Загрузка...</p>
+                        </div>
+                    </div>
                 </div>
                 
                 <button class="btn btn-submit" id="submitBtn" onclick="handleSubmit()" disabled>
                     Подтвердить запись
                 </button>
-
-                <!-- Отладочная информация -->
-                <div id="debugInfo" class="debug-info" style="display: none;">
-                    <strong>Отладка:</strong><br>
-                    <span id="debugText"></span>
-                </div>
             </div>
         </div>
         
@@ -305,6 +324,7 @@
                 <h2>Вы записаны!</h2>
                 <div class="booking-details">
                     <p><strong>Имя:</strong> <span id="successName"></span></p>
+                    <p><strong>Телефон:</strong> <span id="successPhone"></span></p>
                     <p><strong>Дата:</strong> <span id="successDate"></span></p>
                     <p><strong>Время:</strong> <span id="successTime"></span></p>
                 </div>
@@ -345,16 +365,102 @@
             userId: tg?.initDataUnsafe?.user?.id || null
         };
 
+        // Хранилище занятых слотов
+        let bookedSlots = {};
+
         // ВСЕ временные слоты (09:00 - 18:00)
         const allTimeSlots = ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00'];
         
-        // Получение доступных дат (начиная с сегодня или завтра, если уже поздно)
+        // НАСТРОЙКА: Ваш Google Apps Script URL
+        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxCiXOcmcmm_SHn7T_GGFH_VAHxfY8Pzqx9n41xm1Gi9moz2MOjOQDwy9WWOYEcAaCf/exec';
+
+        // Форматирование телефона
+        const phoneInput = document.getElementById('phoneInput');
+        phoneInput.addEventListener('input', (e) => {
+            let value = e.target.value.replace(/\D/g, ''); // Только цифры
+            
+            // Всегда начинаем с 7
+            if (!value.startsWith('7')) {
+                value = '7' + value.replace(/^7+/, '');
+            }
+            
+            // Ограничиваем 11 цифрами (7 + 10 цифр)
+            value = value.substring(0, 11);
+            
+            // Форматируем: +7 (XXX) XXX-XX-XX
+            let formatted = '+7 ';
+            if (value.length > 1) {
+                formatted += '(' + value.substring(1, 4);
+            }
+            if (value.length >= 5) {
+                formatted += ') ' + value.substring(4, 7);
+            }
+            if (value.length >= 8) {
+                formatted += '-' + value.substring(7, 9);
+            }
+            if (value.length >= 10) {
+                formatted += '-' + value.substring(9, 11);
+            }
+            
+            e.target.value = formatted;
+            
+            // Сохраняем только цифры
+            booking.phone = value.length === 11 ? '+' + value : '';
+            updateSubmitButton();
+        });
+
+        // Запрет удаления +7
+        phoneInput.addEventListener('keydown', (e) => {
+            const value = e.target.value;
+            const cursorPosition = e.target.selectionStart;
+            
+            // Запрещаем удаление, если курсор в начале
+            if ((e.key === 'Backspace' || e.key === 'Delete') && cursorPosition <= 3) {
+                e.preventDefault();
+            }
+        });
+
+        // Загрузка занятых слотов из Google Sheets
+        async function loadBookedSlots() {
+            try {
+                console.log('📥 Загрузка занятых слотов...');
+                
+                // Используем GET запрос для чтения данных
+                const response = await fetch(GOOGLE_SCRIPT_URL + '?action=getBookings');
+                const data = await response.json();
+                
+                console.log('📊 Полученные данные:', data);
+                
+                // Формируем объект занятых слотов
+                bookedSlots = {};
+                if (data && data.bookings) {
+                    data.bookings.forEach(booking => {
+                        const key = `${booking.date}_${booking.time}`;
+                        bookedSlots[key] = true;
+                    });
+                }
+                
+                console.log('✅ Занятые слоты:', bookedSlots);
+                return true;
+            } catch (error) {
+                console.error('❌ Ошибка загрузки слотов:', error);
+                // Продолжаем работу даже если не удалось загрузить
+                return false;
+            }
+        }
+
+        // Проверка, занят ли слот
+        function isSlotBooked(date, time) {
+            const key = `${date}_${time}`;
+            return bookedSlots[key] === true;
+        }
+
+        // Получение доступных дат
         function getAvailableDays() {
             const days = [];
             const now = new Date();
             const currentHour = now.getHours();
             
-            // Если уже после 18:00, начинаем с завтрашнего дня
             const startDay = currentHour >= 18 ? 1 : 0;
             
             for (let i = startDay; i < startDay + 7; i++) {
@@ -365,26 +471,28 @@
             return days;
         }
 
-        // Получение доступных временных слотов для выбранной даты
+        // Получение доступных временных слотов
         function getAvailableTimeSlots(selectedDate) {
             const now = new Date();
             const today = now.toISOString().split('T')[0];
             const currentHour = now.getHours();
             const currentMinute = now.getMinutes();
             
-            // Если выбран сегодняшний день
-            if (selectedDate === today) {
-                return allTimeSlots.filter(slot => {
+            return allTimeSlots.filter(slot => {
+                // Проверяем, не занят ли слот
+                if (isSlotBooked(selectedDate, slot)) {
+                    return false;
+                }
+                
+                // Если сегодня - проверяем время
+                if (selectedDate === today) {
                     const [hour, minute] = slot.split(':').map(Number);
-                    // Показываем только слоты, которые еще не прошли (с запасом 1 час)
                     if (hour < currentHour + 1) return false;
                     if (hour === currentHour + 1 && currentMinute > 0) return false;
-                    return true;
-                });
-            }
-            
-            // Для будущих дней показываем все слоты
-            return allTimeSlots;
+                }
+                
+                return true;
+            });
         }
 
         function formatDate(dateStr) {
@@ -416,30 +524,40 @@
             const availableSlots = getAvailableTimeSlots(booking.date);
             
             if (availableSlots.length === 0) {
-                grid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #6b7280; padding: 16px;">На сегодня все слоты заняты. Выберите другую дату.</p>';
+                grid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #dc2626; padding: 16px; font-weight: 600;">❌ На эту дату все слоты заняты.<br>Выберите другой день.</p>';
                 return;
             }
             
             grid.innerHTML = allTimeSlots.map(time => {
                 const isAvailable = availableSlots.includes(time);
+                const isBooked = isSlotBooked(booking.date, time);
+                
                 return `<button 
                     class="btn btn-time ${!isAvailable ? 'disabled' : ''}" 
                     onclick="${isAvailable ? `selectTime('${time}')` : 'return false'}"
                     ${!isAvailable ? 'disabled' : ''}
+                    title="${isBooked ? 'Занято' : isAvailable ? 'Доступно' : 'Прошло'}"
                 >${time}</button>`;
             }).join('');
         }
 
-        function selectDate(date) {
+        async function selectDate(date) {
             booking.date = date;
-            booking.time = ''; // Сброс времени при смене даты
+            booking.time = '';
             
-            // Обновляем активную кнопку даты
             document.querySelectorAll('.btn-date').forEach(btn => btn.classList.remove('active'));
             event.target.classList.add('active');
             
-            // Показываем время
-            document.getElementById('timeGroup').style.display = 'block';
+            const timeGroup = document.getElementById('timeGroup');
+            const timesGrid = document.getElementById('timesGrid');
+            
+            timeGroup.style.display = 'block';
+            timesGrid.innerHTML = '<div class="loading"><div class="spinner"></div><p>Загрузка слотов...</p></div>';
+            
+            // Загружаем актуальные данные о бронированиях
+            await loadBookedSlots();
+            
+            // Отрисовываем время
             renderTimes();
             updateSubmitButton();
         }
@@ -447,21 +565,14 @@
         function selectTime(time) {
             booking.time = time;
             
-            // Обновляем активную кнопку времени
             document.querySelectorAll('.btn-time').forEach(btn => btn.classList.remove('active'));
             event.target.classList.add('active');
             
             updateSubmitButton();
         }
 
-        // Обновление полей ввода
         document.getElementById('nameInput').addEventListener('input', (e) => {
             booking.name = e.target.value;
-            updateSubmitButton();
-        });
-
-        document.getElementById('phoneInput').addEventListener('input', (e) => {
-            booking.phone = e.target.value;
             updateSubmitButton();
         });
 
@@ -470,7 +581,6 @@
             const isValid = booking.name && booking.phone && booking.date && booking.time;
             btn.disabled = !isValid;
             
-            // Управление главной кнопкой Telegram
             if (tg) {
                 if (isValid) {
                     tg.MainButton.setText('Подтвердить запись ✅');
@@ -489,47 +599,29 @@
                 timestamp: new Date().toISOString()
             };
 
-            // Показываем отладочную информацию
-            const debugDiv = document.getElementById('debugInfo');
-            const debugText = document.getElementById('debugText');
-            debugDiv.style.display = 'block';
-            debugText.textContent = 'Отправка данных в Google Sheets...';
-
             // Отправка в Google Sheets
-            const success = await sendToGoogleSheets(bookingData);
+            await sendToGoogleSheets(bookingData);
             
-            if (success) {
-                debugText.textContent = '✅ Данные успешно отправлены!';
-            } else {
-                debugText.textContent = '⚠️ Возможна ошибка при отправке. Проверьте консоль.';
+            // Показываем экран успеха
+            document.getElementById('bookingScreen').classList.add('hidden');
+            document.getElementById('successScreen').classList.remove('hidden');
+            
+            document.getElementById('successName').textContent = booking.name;
+            document.getElementById('successPhone').textContent = booking.phone;
+            document.getElementById('successDate').textContent = formatDate(booking.date);
+            document.getElementById('successTime').textContent = booking.time;
+            
+            if (tg) {
+                tg.MainButton.hide();
+                tg.sendData(JSON.stringify(bookingData));
             }
-
-            // Показываем экран успеха через 1 секунду
-            setTimeout(() => {
-                document.getElementById('bookingScreen').classList.add('hidden');
-                document.getElementById('successScreen').classList.remove('hidden');
-                
-                document.getElementById('successName').textContent = booking.name;
-                document.getElementById('successDate').textContent = formatDate(booking.date);
-                document.getElementById('successTime').textContent = booking.time;
-                
-                // Отправляем данные боту
-                if (tg) {
-                    tg.MainButton.hide();
-                    tg.sendData(JSON.stringify(bookingData));
-                }
-            }, 1500);
         }
 
         async function sendToGoogleSheets(booking) {
             try {
-                // ВСТАВЬТЕ СЮДА ВАШ GOOGLE APPS SCRIPT URL
-                const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwsDf3R6IjZmskx-R_OXZJlEGQYuot4qg2UI94YbBB34qnw0NI-CPkKha31lFKS3wA/exec';
-                
                 console.log('📤 Отправка данных:', booking);
-                console.log('🔗 URL:', GOOGLE_SCRIPT_URL);
                 
-                const response = await fetch(GOOGLE_SCRIPT_URL, {
+                await fetch(GOOGLE_SCRIPT_URL, {
                     method: 'POST',
                     mode: 'no-cors',
                     headers: {
@@ -539,8 +631,6 @@
                 });
 
                 console.log('✅ Запрос отправлен успешно');
-                console.log('📊 Данные:', booking);
-                
                 return true;
             } catch (error) {
                 console.error('❌ Ошибка отправки в Google Sheets:', error);
@@ -551,12 +641,14 @@
         // Инициализация
         renderDates();
         
-        // Обновляем имя из поля ввода
         const nameInput = document.getElementById('nameInput');
         if (nameInput.value) {
             booking.name = nameInput.value;
             updateSubmitButton();
         }
+
+        // Загружаем занятые слоты при старте
+        loadBookedSlots();
     </script>
 </body>
 </html>
