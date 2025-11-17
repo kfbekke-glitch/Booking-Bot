@@ -90,7 +90,7 @@ input:focus{outline:none;border-color:var(--primary);background:white;box-shadow
 
 <script>
 /* ---------- ВНИМАНИЕ: вставьте сюда URL вашего Web App (GAS) ---------- */
-const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzo_187UCzoxrrwLjttC6WotfA4CzU3o_bPrHFltgXLM04TcR_dnQK6Dm6JQaifqAtZ/exec'; // <-- Замените
+const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby2cffUBvcRR4qCVcMJR10xOMeDToBidCYh8OpMsXhxdPds1euT-lLgMuquftAbDOt1/exec';
 /* -------------------------------------------------------------------- */
 
 const ALL_SLOTS = ['09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00'];
@@ -122,6 +122,7 @@ function isoDate(d){
 function normalizeTime(timeStr){
   if(!timeStr && timeStr !== 0) return '';
   let s = String(timeStr).trim();
+  if(s.startsWith("'")) s = s.slice(1); // убираем возможный апостроф из GAS
   if(s.includes(':')){
     const p = s.split(':');
     return p[0].padStart(2,'0') + ':' + (p[1]||'00').padStart(2,'0');
@@ -174,7 +175,6 @@ async function loadBookings(){
         const nd = b.date;
         const key = `${nd}_${nt}`;
         bookedSlots[key] = true;
-        // добавим в userDayBookings для проверки дублей
         userDayBookings.push({
           date: nd,
           time: nt,
@@ -183,7 +183,6 @@ async function loadBookings(){
         });
       });
     }
-    // если уже выбрана дата — рендерим
     if(selectedDate) renderTimes();
   } catch(err){
     console.error('Ошибка загрузки записей:', err);
@@ -233,7 +232,6 @@ function selectDate(dateStr){
   selectedDate = dateStr;
   selectedTime = '';
   document.querySelectorAll('.btn-date').forEach(b=>b.classList.remove('active'));
-  // активируем локально кнопку даты (если есть)
   const dbtn = document.querySelector(`.btn-date[data-date="${dateStr}"]`);
   if(dbtn) dbtn.classList.add('active');
   timeBlock.classList.remove('hidden');
@@ -264,7 +262,7 @@ async function sendBooking(){
   const phone = normalizePhone(phoneInput.value);
   if(!name || !phone || !selectedDate || !selectedTime) return;
 
-  // проверка лимита 1 запись в день (по номеру или по userId)
+  // проверка лимита 1 запись в день (по номеру)
   const conflict = userDayBookings.some(b=>b.date===selectedDate && (b.phone === phone));
   if(conflict){
     showModal(`<div class="modal-header"><h2>⚠️ Лимит записей</h2><p>Вы уже записаны на этот день</p></div>
@@ -282,7 +280,6 @@ async function sendBooking(){
   params.append('phone', phone);
   params.append('date', selectedDate);
   params.append('time', selectedTime);
-  // userId/username можно добавить при интеграции с TG
   params.append('userId','');
   params.append('username','');
 
@@ -363,24 +360,6 @@ async function openMyBookings(){
   }
 }
 
-// --- небольшая логика UI для дат (показываем ближайшие 7 дней) ---
-function getAvailableDays(){
-  const now = new Date();
-  const days = [];
-  for(let i=0;i<7;i++){
-    const d = new Date();
-    d.setDate(now.getDate()+i);
-    days.push(isoDate(d));
-  }
-  return days;
-}
-
-function renderDatesShort(){
-  // В этой версии используем обычный input[type=date] — даты показываются через picker
-  // Если хотите блоки-датами (кнопки), можно раскомментировать реализацию ниже и убрать datePicker
-  // Реализация кнопок изначально была в оригинале — здесь сохранён input-date для удобства.
-}
-
 // --- обработчики событий ---
 phoneInput.addEventListener('input',(e)=>{
   let v = e.target.value.replace(/\D/g,'');
@@ -413,13 +392,11 @@ myBookingsBtn.addEventListener('click', openMyBookings);
 
 // --- инициализация ---
 (async function init(){
-  // Если Telegram WebApp — можно подставить имя
   try {
     const tg = window.Telegram?.WebApp;
     if(tg){ tg.ready(); if(tg.initDataUnsafe?.user?.first_name) nameInput.value = tg.initDataUnsafe.user.first_name; }
   } catch(e){}
 
-  // ставим дату по-умолчанию: сегодня
   const today = new Date();
   datePicker.value = isoDate(today);
   selectedDate = datePicker.value;
