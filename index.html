@@ -257,6 +257,42 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+
+        .error-screen {
+            text-align: center;
+            padding: 48px 24px;
+        }
+
+        .error-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+            font-size: 40px;
+        }
+
+        .alert-warning {
+            background: #fef3c7;
+            border: 2px solid #fbbf24;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        .alert-warning p {
+            color: #92400e;
+            margin: 4px 0;
+            font-size: 14px;
+        }
+
+        .alert-warning strong {
+            color: #78350f;
+            font-size: 16px;
+        }
     </style>
 </head>
 <body>
@@ -289,6 +325,13 @@
                     </label>
                     <input type="tel" id="phoneInput" placeholder="+7 (999) 123-45-67" value="+7 ">
                 </div>
+
+                <!-- Предупреждение о лимите -->
+                <div class="alert-warning">
+                    <p><strong>🛡️ Защита от спама</strong></p>
+                    <p>• Можно записаться только 1 раз в день</p>
+                    <p>• Проверка по номеру телефона и Telegram ID</p>
+                </div>
                 
                 <div class="form-group">
                     <label class="label">
@@ -314,6 +357,26 @@
                 <button class="btn btn-submit" id="submitBtn" onclick="handleSubmit()" disabled>
                     Подтвердить запись
                 </button>
+            </div>
+        </div>
+
+        <!-- Экран ошибки (лимит превышен) -->
+        <div id="errorScreen" class="card hidden">
+            <div class="error-screen">
+                <div class="error-icon">⚠️</div>
+                <h2>Лимит записей</h2>
+                <div class="booking-details">
+                    <p style="text-align: center; color: #dc2626; font-weight: 600;">
+                        Вы уже записаны на сегодня!
+                    </p>
+                    <p style="text-align: center; color: #6b7280; margin-top: 12px;">
+                        Можно записаться только 1 раз в день.<br>
+                        Попробуйте завтра или свяжитесь с нами.
+                    </p>
+                </div>
+                <div style="text-align: center; margin-top: 16px; color: #6b7280;">
+                    <p>📞 +7 (999) 123-45-67</p>
+                </div>
             </div>
         </div>
         
@@ -343,51 +406,42 @@
     </div>
 
     <script>
-        // Инициализация Telegram Web App
         let tg = window.Telegram?.WebApp;
         if (tg) {
             tg.ready();
             tg.expand();
             
-            // Получаем данные пользователя
             const user = tg.initDataUnsafe?.user;
             if (user) {
                 document.getElementById('nameInput').value = user.first_name + (user.last_name ? ' ' + user.last_name : '');
             }
         }
 
-        // Данные
         const booking = {
             name: '',
             phone: '',
             date: '',
             time: '',
-            userId: tg?.initDataUnsafe?.user?.id || null
+            userId: tg?.initDataUnsafe?.user?.id || null,
+            username: tg?.initDataUnsafe?.user?.username || null
         };
 
-        // Хранилище занятых слотов
         let bookedSlots = {};
+        let userBookingsToday = [];
 
-        // ВСЕ временные слоты (09:00 - 18:00)
         const allTimeSlots = ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00'];
-        
-        // НАСТРОЙКА: Ваш Google Apps Script URL
         const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxCiXOcmcmm_SHn7T_GGFH_VAHxfY8Pzqx9n41xm1Gi9moz2MOjOQDwy9WWOYEcAaCf/exec';
 
-        // Форматирование телефона
         const phoneInput = document.getElementById('phoneInput');
         phoneInput.addEventListener('input', (e) => {
-            let value = e.target.value.replace(/\D/g, ''); // Только цифры
+            let value = e.target.value.replace(/\D/g, '');
             
-            // Всегда начинаем с 7
             if (!value.startsWith('7')) {
                 value = '7' + value.replace(/^7+/, '');
             }
             
-            // Ограничиваем 11 цифрами (7 + 10 цифр)
             value = value.substring(0, 11);
             
-            // Форматируем: +7 (XXX) XXX-XX-XX
             let formatted = '+7 ';
             if (value.length > 1) {
                 formatted += '(' + value.substring(1, 4);
@@ -403,59 +457,70 @@
             }
             
             e.target.value = formatted;
-            
-            // Сохраняем только цифры
             booking.phone = value.length === 11 ? '+' + value : '';
             updateSubmitButton();
         });
 
-        // Запрет удаления +7
         phoneInput.addEventListener('keydown', (e) => {
-            const value = e.target.value;
             const cursorPosition = e.target.selectionStart;
-            
-            // Запрещаем удаление, если курсор в начале
             if ((e.key === 'Backspace' || e.key === 'Delete') && cursorPosition <= 3) {
                 e.preventDefault();
             }
         });
 
-        // Загрузка занятых слотов из Google Sheets
+        // ПРОВЕРКА ЛИМИТА ЗАПИСЕЙ
+        function checkUserBookingLimit(phone, userId) {
+            const today = new Date().toISOString().split('T')[0];
+            
+            // Проверяем по телефону
+            const phoneBookings = userBookingsToday.filter(b => 
+                b.phone === phone && b.date === today
+            );
+            
+            // Проверяем по User ID (если есть)
+            const userIdBookings = userId ? userBookingsToday.filter(b => 
+                b.userId === userId && b.date === today
+            ) : [];
+            
+            return phoneBookings.length > 0 || userIdBookings.length > 0;
+        }
+
         async function loadBookedSlots() {
             try {
                 console.log('📥 Загрузка занятых слотов...');
                 
-                // Используем GET запрос для чтения данных
                 const response = await fetch(GOOGLE_SCRIPT_URL + '?action=getBookings');
                 const data = await response.json();
                 
                 console.log('📊 Полученные данные:', data);
                 
-                // Формируем объект занятых слотов
                 bookedSlots = {};
+                userBookingsToday = [];
+                
                 if (data && data.bookings) {
-                    data.bookings.forEach(booking => {
-                        const key = `${booking.date}_${booking.time}`;
+                    data.bookings.forEach(bookingItem => {
+                        const key = `${bookingItem.date}_${bookingItem.time}`;
                         bookedSlots[key] = true;
+                        
+                        // Сохраняем для проверки лимита
+                        userBookingsToday.push(bookingItem);
                     });
                 }
                 
                 console.log('✅ Занятые слоты:', bookedSlots);
+                console.log('👥 Записи пользователей:', userBookingsToday);
                 return true;
             } catch (error) {
                 console.error('❌ Ошибка загрузки слотов:', error);
-                // Продолжаем работу даже если не удалось загрузить
                 return false;
             }
         }
 
-        // Проверка, занят ли слот
         function isSlotBooked(date, time) {
             const key = `${date}_${time}`;
             return bookedSlots[key] === true;
         }
 
-        // Получение доступных дат
         function getAvailableDays() {
             const days = [];
             const now = new Date();
@@ -471,7 +536,6 @@
             return days;
         }
 
-        // Получение доступных временных слотов
         function getAvailableTimeSlots(selectedDate) {
             const now = new Date();
             const today = now.toISOString().split('T')[0];
@@ -479,12 +543,10 @@
             const currentMinute = now.getMinutes();
             
             return allTimeSlots.filter(slot => {
-                // Проверяем, не занят ли слот
                 if (isSlotBooked(selectedDate, slot)) {
                     return false;
                 }
                 
-                // Если сегодня - проверяем время
                 if (selectedDate === today) {
                     const [hour, minute] = slot.split(':').map(Number);
                     if (hour < currentHour + 1) return false;
@@ -508,7 +570,6 @@
             return date.toLocaleDateString('ru-RU', { weekday: 'short', day: 'numeric', month: 'short' });
         }
 
-        // Отрисовка дат
         function renderDates() {
             const grid = document.getElementById('datesGrid');
             const days = getAvailableDays();
@@ -518,7 +579,6 @@
             ).join('');
         }
 
-        // Отрисовка времени
         function renderTimes() {
             const grid = document.getElementById('timesGrid');
             const availableSlots = getAvailableTimeSlots(booking.date);
@@ -554,10 +614,7 @@
             timeGroup.style.display = 'block';
             timesGrid.innerHTML = '<div class="loading"><div class="spinner"></div><p>Загрузка слотов...</p></div>';
             
-            // Загружаем актуальные данные о бронированиях
             await loadBookedSlots();
-            
-            // Отрисовываем время
             renderTimes();
             updateSubmitButton();
         }
@@ -593,16 +650,21 @@
         }
 
         async function handleSubmit() {
+            // ПРОВЕРКА ЛИМИТА
+            if (checkUserBookingLimit(booking.phone, booking.userId)) {
+                console.log('🚫 Лимит превышен для:', booking.phone, booking.userId);
+                showErrorScreen();
+                return;
+            }
+
             const bookingData = {
                 ...booking,
                 createdAt: new Date().toLocaleString('ru-RU'),
                 timestamp: new Date().toISOString()
             };
 
-            // Отправка в Google Sheets
             await sendToGoogleSheets(bookingData);
             
-            // Показываем экран успеха
             document.getElementById('bookingScreen').classList.add('hidden');
             document.getElementById('successScreen').classList.remove('hidden');
             
@@ -614,6 +676,15 @@
             if (tg) {
                 tg.MainButton.hide();
                 tg.sendData(JSON.stringify(bookingData));
+            }
+        }
+
+        function showErrorScreen() {
+            document.getElementById('bookingScreen').classList.add('hidden');
+            document.getElementById('errorScreen').classList.remove('hidden');
+            
+            if (tg) {
+                tg.MainButton.hide();
             }
         }
 
@@ -638,7 +709,6 @@
             }
         }
 
-        // Инициализация
         renderDates();
         
         const nameInput = document.getElementById('nameInput');
@@ -647,7 +717,6 @@
             updateSubmitButton();
         }
 
-        // Загружаем занятые слоты при старте
         loadBookedSlots();
     </script>
 </body>
