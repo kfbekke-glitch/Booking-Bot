@@ -1,147 +1,141 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>Барбершоп — Запись</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
-  /* Базовые стили — современный строгий вид */
+  /* ---------- Base ---------- */
   *{box-sizing:border-box}
   html,body{height:100%}
   body{
-    font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-    margin:0; padding:20px; background: linear-gradient(135deg,#f5f7ff 0,#ffffff 100%);
-    color:#111827;
+    margin:0;padding:22px;
+    font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    background:linear-gradient(135deg,#f7f8ff 0,#ffffff 100%);
+    color:#0f172a;
   }
-  .container{max-width:680px; margin:0 auto}
-  .card{background:#fff;border-radius:14px;box-shadow:0 10px 30px rgba(2,6,23,0.08);overflow:hidden;margin-bottom:18px}
-  .header{padding:20px 22px;background:linear-gradient(90deg,#5b21b6,#0ea5e9);color:#fff}
+  .container{max-width:720px;margin:0 auto}
+  .card{background:#fff;border-radius:14px;box-shadow:0 12px 30px rgba(12,20,40,0.06);overflow:hidden}
+  .header{padding:18px 20px;background:linear-gradient(90deg,#5b21b6,#0891b2);color:#fff}
   .header h1{margin:0;font-size:20px}
-  .header p{margin:6px 0 0 0;opacity:0.95;font-size:13px}
+  .header p{margin:8px 0 0 0;font-size:13px;opacity:.95}
   .form{padding:18px}
-  .form-group{margin-bottom:16px}
-  .label{display:block;font-weight:700;margin-bottom:8px;color:#374151}
+  .form-group{margin-bottom:14px}
+  label{display:block;font-weight:700;margin-bottom:8px;color:#0f172a}
   input[type="text"],input[type="tel"]{
-    width:100%; padding:12px 14px; border-radius:10px; border:1px solid #e6e9f2; font-size:15px;
-    background:#fcfcfd;
+    width:100%;padding:12px 14px;border-radius:10px;border:1px solid #e6e9f2;font-size:15px;background:#fcfdff;
   }
-  input:focus{outline:none;border-color:#7c3aed;box-shadow:0 0 0 4px rgba(124,58,237,0.06)}
-  .dates-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
-  .btn-date{padding:12px;border-radius:10px;border:0;background:#f3f4f6;cursor:pointer;font-weight:700}
-  .btn-date:hover{transform:translateY(-2px)}
-  .btn-date.active{background:linear-gradient(90deg,#7c3aed,#06b6d4);color:#fff;box-shadow:0 8px 24px rgba(59,130,246,0.12)}
-  .times-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-  .time-btn{padding:12px;border-radius:10px;border:0;background:#f3f4f6;cursor:pointer;font-weight:700}
+  input:focus{outline:none;border-color:#7c3aed;box-shadow:0 6px 20px rgba(124,58,237,0.08)}
+  .grid-dates{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:10px}
+  .btn-date{padding:11px;border-radius:10px;border:0;background:#f3f4f6;cursor:pointer;font-weight:700;transition:all .18s ease}
+  .btn-date:hover{transform:translateY(-3px)}
+  .btn-date.active{background:linear-gradient(90deg,#7c3aed,#06b6d4);color:#fff;box-shadow:0 12px 30px rgba(59,130,246,0.12)}
+  .grid-times{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  .time-btn{padding:10px;border-radius:10px;border:0;background:#f3f4f6;cursor:pointer;font-weight:700;transition:all .14s ease}
   .time-btn:hover{transform:translateY(-2px)}
   .time-btn.active{background:linear-gradient(90deg,#7c3aed,#06b6d4);color:#fff}
-  .time-btn.disabled{background:#fff5f5;color:#991b1b;cursor:not-allowed;border:1px solid rgba(220,38,38,0.08)}
-  .actions{display:flex;gap:10px;flex-direction:column;padding:16px}
-  .btn-primary{width:100%;padding:14px;border-radius:10px;border:0;background:linear-gradient(90deg,#10b981,#059669);color:#fff;font-weight:800;cursor:pointer}
+  .time-btn.disabled{background:#fff5f5;color:#9b1c1c;cursor:not-allowed;border:1px solid rgba(220,38,38,0.08)}
+  .actions{display:flex;gap:10px;flex-direction:column;margin-top:12px}
+  .btn-primary{width:100%;padding:14px;border-radius:10px;border:0;background:linear-gradient(90deg,#10b981,#059669);color:#fff;font-weight:800;cursor:pointer;transition:transform .12s}
+  .btn-primary:active{transform:scale(.997)}
   .btn-primary:disabled{opacity:.45;cursor:not-allowed}
-  .btn-secondary{width:100%;padding:12px;border-radius:10px;border:0;background:#6366f1;color:#fff;font-weight:700;cursor:pointer}
-  .muted{color:#6b7280;font-size:13px}
-  .info{padding:12px 18px;text-align:center;color:#6b7280;font-size:13px}
-  /* cards for result */
-  .result-card{padding:22px;text-align:center}
-  .result-card.success{background:linear-gradient(180deg,#f0fff6,#ffffff);color:#064e3b;border-radius:10px}
-  .result-card.error{background:linear-gradient(180deg,#fff5f5,#ffffff);color:#7f1d1d;border-radius:10px}
-  /* my bookings block */
-  .my-bookings{padding:14px}
-  .booking-item{padding:10px;background:#f8fafc;border-radius:10px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
+  .btn-ghost{width:100%;padding:12px;border-radius:10px;border:0;background:#6366f1;color:#fff;font-weight:700;cursor:pointer}
+  .muted{color:#64748b;font-size:13px}
+  .info{padding:12px 18px;text-align:center;color:#64748b;font-size:13px}
+
+  /* ---------- Modal overlay (center) ---------- */
+  .overlay{
+    position:fixed;left:0;top:0;width:100%;height:100%;display:none;
+    align-items:center;justify-content:center;background:rgba(2,6,23,0.45);z-index:1200;
+    backdrop-filter: blur(2px);
+  }
+  .overlay.show{display:flex;animation:fadeIn .18s ease forwards}
+
+  @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+
+  .modal{
+    width: min(720px, 92%);
+    background:#fff;border-radius:14px;padding:18px;box-shadow:0 20px 60px rgba(2,6,23,0.16);
+    transform: translateY(6px) scale(.98);
+    opacity:0; transition: transform .22s cubic-bezier(.2,.9,.3,1), opacity .22s ease;
+  }
+  .overlay.show .modal{transform:translateY(0) scale(1);opacity:1}
+
+  .modal h2{margin:6px 0 12px 0;font-size:20px}
+  .modal .muted{margin-bottom:10px}
+
+  .modal .booking-list{max-height:320px;overflow:auto;padding-right:6px}
+  .booking-item{display:flex;justify-content:space-between;align-items:center;padding:12px;border-radius:10px;background:#f8fafc;margin-bottom:10px}
   .booking-item .left{display:flex;flex-direction:column}
-  .small{font-size:13px;color:#475569}
-  /* modal fallback for small screens */
+  .booking-item .small{font-size:13px;color:#334155}
+
+  .modal .actions{margin-top:12px;flex-direction:row}
+  .modal .actions .btn{flex:1}
+
+  /* small devices adjustments */
   @media (max-width:520px){
-    .dates-grid{grid-template-columns:repeat(1,1fr)}
-    .times-grid{grid-template-columns:repeat(2,1fr)}
+    .grid-dates{grid-template-columns:repeat(1,1fr)}
+    .grid-times{grid-template-columns:repeat(2,1fr)}
   }
 </style>
 </head>
 <body>
 <div class="container">
-  <!-- Booking card -->
-  <div id="bookingCard" class="card" role="region" aria-label="Запись на стрижку">
+
+  <div id="bookingCard" class="card" role="region" aria-label="Запись">
     <div class="header">
       <h1>Барбершоп</h1>
-      <p>Онлайн-запись — 1 раз в день. Проверка по номеру и Telegram ID.</p>
+      <p>Удобная онлайн-запись — 1 раз в день. Проверка по номеру и Telegram ID.</p>
     </div>
-    <div class="form" id="formRoot">
+
+    <div class="form">
       <div class="form-group">
-        <label class="label" for="nameInput">Ваше имя</label>
+        <label for="nameInput">Ваше имя</label>
         <input id="nameInput" type="text" placeholder="Иван Иванов">
       </div>
 
       <div class="form-group">
-        <label class="label" for="phoneInput">Телефон</label>
+        <label for="phoneInput">Телефон</label>
         <input id="phoneInput" type="tel" placeholder="+7 (999) 123-45-67" value="+7 ">
       </div>
 
       <div class="form-group">
-        <label class="label">Выберите дату</label>
-        <div id="datesGrid" class="dates-grid" aria-live="polite"></div>
+        <label>Выберите дату</label>
+        <div id="datesGrid" class="grid-dates" aria-live="polite"></div>
       </div>
 
-      <div class="form-group" id="timeBlock" style="display:none">
-        <label class="label">Выберите время</label>
-        <div id="timesGrid" class="times-grid" aria-live="polite"></div>
+      <div id="timeBlock" class="form-group" style="display:none">
+        <label>Выберите время</label>
+        <div id="timesGrid" class="grid-times" aria-live="polite"></div>
       </div>
 
       <div class="actions">
         <button id="submitBtn" class="btn-primary" disabled>Подтвердить запись</button>
-        <button id="myBookingsBtn" class="btn-secondary">Мои записи</button>
+        <button id="myBookingsBtn" class="btn-ghost">Мои записи</button>
       </div>
+
+      <div class="info">📍 ул. Примерная, 123 — Пн–Вс 09:00–19:00</div>
     </div>
   </div>
 
-  <!-- Success -->
-  <div id="successCard" class="card hidden" role="status">
-    <div class="result-card success">
-      <h2>Запись подтверждена</h2>
-      <p id="successName" class="muted"></p>
-      <p id="successPhone" class="muted"></p>
-      <p>Дата: <strong id="successDate"></strong></p>
-      <p>Время: <strong id="successTime"></strong></p>
-    </div>
-  </div>
+</div>
 
-  <!-- Error -->
-  <div id="errorCard" class="card hidden" role="alert">
-    <div class="result-card error">
-      <h2>Ошибка</h2>
-      <p id="errorMessage" class="muted"></p>
-    </div>
+<!-- Modal (used for success/error/my bookings) -->
+<div id="overlay" class="overlay" role="dialog" aria-modal="true" aria-hidden="true" onclick="overlayClick(event)">
+  <div id="modal" class="modal" role="document" onclick="event.stopPropagation()">
+    <!-- content injected dynamically -->
   </div>
-
-  <!-- My bookings (inline block) -->
-  <div id="myBookingsCard" class="card hidden" aria-hidden="true">
-    <div class="result-card">
-      <h2 style="color:#111827">Мои записи</h2>
-      <div id="myBookingsBody" class="my-bookings">
-        <div class="muted">Загрузка...</div>
-      </div>
-      <div style="padding:14px">
-        <button onclick="closeMyBookings()" class="btn-secondary" style="background:#e6edf8;color:#0f172a">Закрыть</button>
-      </div>
-    </div>
-  </div>
-
-  <div class="info">📍 ул. Примерная, 123 — Пн–Вс 09:00–19:00</div>
 </div>
 
 <script>
-/* ================= CONFIG - вставь сюда свой URL веб-приложения Google Apps Script ================= */
+/* ====== CONFIG - вставь свой URL ====== */
 const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyAZLUA2FDiAzMx6f4wmaqD2eKHOd38SZ45z_4chPg_ad2vtXJ8qhq_EkYTw5Cj61w/exec';
-/* ================================================================================================ */
+/* ===================================== */
 
-/* ============== Telegram init (if available) ============== */
 const tg = window.Telegram?.WebApp || null;
-if (tg) {
-  try { tg.ready(); tg.expand(); } catch(e){ /* ignore */ }
-  try { if (tg.MainButton) tg.MainButton.hide(); } catch(e){ /* ignore */ }
-}
+if(tg){ try{tg.ready(); tg.expand();}catch(e){} try{ if(tg.MainButton) tg.MainButton.hide(); }catch(e){} }
 
-/* ============== DOM elements ============== */
 const nameInput = document.getElementById('nameInput');
 const phoneInput = document.getElementById('phoneInput');
 const datesGrid = document.getElementById('datesGrid');
@@ -150,137 +144,85 @@ const timeBlock = document.getElementById('timeBlock');
 const submitBtn = document.getElementById('submitBtn');
 const myBookingsBtn = document.getElementById('myBookingsBtn');
 
-const bookingCard = document.getElementById('bookingCard');
-const successCard = document.getElementById('successCard');
-const errorCard = document.getElementById('errorCard');
-const myBookingsCard = document.getElementById('myBookingsCard');
+const overlay = document.getElementById('overlay');
+const modal = document.getElementById('modal');
 
-const successName = document.getElementById('successName');
-const successPhone = document.getElementById('successPhone');
-const successDate = document.getElementById('successDate');
-const successTime = document.getElementById('successTime');
-const errorMessage = document.getElementById('errorMessage');
-const myBookingsBody = document.getElementById('myBookingsBody');
-
-/* ============== Globals ============== */
 const tgUser = tg?.initDataUnsafe?.user || {};
 const userId = tgUser.id || null;
 const username = tgUser.username || '';
+
 const allTimeSlots = ['09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00'];
 
-let bookedSlots = {};   // map "YYYY-MM-DD_HH:MM" => true
-let todayBookings = []; // array of bookings {date,time,phone,userId,...} used for limit checks
+let bookedSlots = {};   // map date_time -> true
+let todayBookings = []; // list of bookings
 let selectedDate = '';
 let selectedTime = '';
 let sending = false;
 
-/* ============== Helpers ============== */
+/* Helpers */
 function isoDate(d){ const y=d.getFullYear(); const m=String(d.getMonth()+1).padStart(2,'0'); const day=String(d.getDate()).padStart(2,'0'); return `${y}-${m}-${day}`; }
-function toHHMM(v){
-  if(!v && v!==0) return '';
-  v = String(v).trim();
-  if(v.includes(':')) {
-    let p = v.split(':'); return p.map(x=>('0'+x.replace(/\D/g,'')).slice(-2)).join(':');
-  }
-  v = v.replace(/\D/g,'');
-  if(v.length<=2) return ('0'+v).slice(-2)+':00';
-  if(v.length===3) return '0'+v[0]+':'+v.slice(1);
-  if(v.length===4) return v.slice(0,2)+':'+v.slice(2);
-  return v;
+function toHHMM(v){ if(!v && v!==0) return ''; v=String(v).trim(); if(v.includes(':')){ let p=v.split(':'); return p.map(x=>('0'+x.replace(/\D/g,'')).slice(-2)).join(':'); } v=v.replace(/\D/g,''); if(v.length<=2) return ('0'+v).slice(-2)+':00'; if(v.length===3) return '0'+v[0]+':'+v.slice(1); if(v.length===4) return v.slice(0,2)+':'+v.slice(2); return v; }
+function normalizePhone(raw){ if(!raw) return ''; let s=String(raw).replace(/\D/g,''); if(s.length===11 && s.startsWith('8')) s='7'+s.slice(1); if(s.length===10) s='7'+s; return s.length===11?('+'+s):s;}
+function formatForUI(dateStr){ const today=isoDate(new Date()); const tomorrow=isoDate(new Date(Date.now()+86400000)); if(dateStr===today) return 'Сегодня'; if(dateStr===tomorrow) return 'Завтра'; const d=new Date(dateStr+'T00:00:00'); return d.toLocaleDateString('ru-RU',{weekday:'short',day:'numeric',month:'short'}); }
+
+/* UI functions for modal */
+function showModal(html){
+  modal.innerHTML = html;
+  overlay.classList.add('show');
+  overlay.setAttribute('aria-hidden','false');
 }
-function normalizePhone(raw){
-  if(!raw) return '';
-  let s = String(raw).replace(/\D/g,'');
-  if(s.length===11 && s.startsWith('8')) s = '7'+s.slice(1);
-  if(s.length===10) s = '7'+s;
-  if(s.length!==11) return s;
-  return '+'+s;
+function closeModal(){
+  overlay.classList.remove('show');
+  overlay.setAttribute('aria-hidden','true');
+  modal.innerHTML = '';
 }
-function formatForUI(dateStr){
-  const today = isoDate(new Date());
-  const tomorrow = isoDate(new Date(Date.now()+24*3600*1000));
-  if(dateStr===today) return 'Сегодня';
-  if(dateStr===tomorrow) return 'Завтра';
-  const d = new Date(dateStr+'T00:00:00');
-  return d.toLocaleDateString('ru-RU',{weekday:'short',day:'numeric',month:'short'});
+function overlayClick(e){
+  // click on backdrop closes modal
+  if(e.target === overlay) closeModal();
 }
 
-/* ============== UI helpers ============== */
-function showError(msg){
-  errorMessage.textContent = msg;
-  bookingCard.classList.add('hidden');
-  myBookingsCard.classList.add('hidden');
-  successCard.classList.add('hidden');
-  errorCard.classList.remove('hidden');
-}
-function showBookingCard(){
-  errorCard.classList.add('hidden');
-  myBookingsCard.classList.add('hidden');
-  successCard.classList.add('hidden');
-  bookingCard.classList.remove('hidden');
-}
-function showSuccess(data){
-  successName.textContent = data.name;
-  successPhone.textContent = data.phone;
-  successDate.textContent = formatForUI(data.date);
-  successTime.textContent = data.time;
-  bookingCard.classList.add('hidden');
-  errorCard.classList.add('hidden');
-  myBookingsCard.classList.add('hidden');
-  successCard.classList.remove('hidden');
-}
-
-/* ============== Render dates & times ============== */
+/* Date/time rendering */
 function getNext7Days(){
   const out=[]; const now=new Date();
   for(let i=0;i<7;i++){ const d=new Date(); d.setDate(now.getDate()+i); out.push(isoDate(d)); }
   return out;
 }
 function renderDates(){
-  datesGrid.innerHTML = '';
-  const days = getNext7Days();
+  datesGrid.innerHTML='';
+  const days=getNext7Days();
   days.forEach(d=>{
     const btn=document.createElement('button');
-    btn.className='btn-date';
-    btn.textContent = formatForUI(d);
-    btn.setAttribute('data-date', d);
-    btn.addEventListener('click', ()=> {
-      selectDate(d, btn);
-    });
+    btn.className='btn-date'; btn.textContent=formatForUI(d);
+    btn.onclick = ()=> selectDate(d, btn);
     datesGrid.appendChild(btn);
   });
 }
 function renderTimes(){
-  timesGrid.innerHTML = '';
+  timesGrid.innerHTML='';
   if(!selectedDate) return;
-  const now = new Date();
-  const threshold = new Date(now.getTime() + 60*60*1000); // +1 hour
+  const now=new Date();
+  const threshold = new Date(now.getTime()+3600000); // now + 1 hour
   allTimeSlots.forEach(slot=>{
-    const btn = document.createElement('button');
-    btn.className='time-btn';
-    btn.textContent = slot;
-    const slotDate = new Date(selectedDate + 'T' + slot + ':00');
+    const btn=document.createElement('button');
+    btn.className='time-btn'; btn.textContent=slot;
+    const slotDt = new Date(selectedDate + 'T' + slot + ':00');
     const key = `${selectedDate}_${slot}`;
-    // booked
     if(bookedSlots[key]){
       btn.classList.add('disabled');
       btn.title = 'Занято';
-    }
-    // too close / past
-    else if(slotDate < threshold){
+    } else if(slotDt < threshold){
       btn.classList.add('disabled');
       btn.title = 'Прошло или слишком близко';
     } else {
-      btn.addEventListener('click', ()=> selectTime(slot, btn));
+      btn.onclick = ()=> selectTime(slot, btn);
     }
     timesGrid.appendChild(btn);
   });
 }
 
-/* ============== Selection handlers ============== */
+/* Select handlers */
 function selectDate(date, btnEl){
-  selectedDate = date;
-  selectedTime = '';
+  selectedDate = date; selectedTime = '';
   document.querySelectorAll('.btn-date').forEach(b=>b.classList.remove('active'));
   btnEl.classList.add('active');
   timeBlock.style.display = 'block';
@@ -294,11 +236,10 @@ function selectTime(time, btnEl){
   updateSubmit();
 }
 
-/* ============== Validation & formatting ============== */
 function updateSubmit(){
   const name = nameInput.value.trim();
-  const phoneDigits = phoneInput.value.replace(/\D/g,'');
-  const ok = name.length>1 && phoneDigits.length===11 && selectedDate && selectedTime && !sending;
+  const digits = phoneInput.value.replace(/\D/g,'');
+  const ok = name.length>1 && digits.length===11 && selectedDate && selectedTime && !sending;
   submitBtn.disabled = !ok;
 }
 
@@ -307,125 +248,84 @@ phoneInput.addEventListener('input', (e)=>{
   let v = e.target.value.replace(/\D/g,'');
   if(!v.startsWith('7')) v = '7' + v.replace(/^7+/, '');
   v = v.slice(0,11);
-  let formatted = '+7 ';
-  if(v.length>1) formatted += '(' + v.slice(1,4);
-  if(v.length>=5) formatted += ') ' + v.slice(4,7);
-  if(v.length>=8) formatted += '-' + v.slice(7,9);
-  if(v.length>=10) formatted += '-' + v.slice(9,11);
-  e.target.value = formatted;
+  let fmt = '+7 ';
+  if(v.length>1) fmt += '(' + v.slice(1,4);
+  if(v.length>=5) fmt += ') ' + v.slice(4,7);
+  if(v.length>=8) fmt += '-' + v.slice(7,9);
+  if(v.length>=10) fmt += '-' + v.slice(9,11);
+  e.target.value = fmt;
   updateSubmit();
 });
 
-/* prefill name */
-if(tgUser.first_name && !nameInput.value) {
-  nameInput.value = tgUser.first_name + (tgUser.last_name ? ' ' + tgUser.last_name : '');
-}
-
-/* ============== Networking: load bookings, my bookings, send booking ============== */
+/* Prefill name if available */
+if(tgUser.first_name && !nameInput.value) nameInput.value = tgUser.first_name + (tgUser.last_name ? (' ' + tgUser.last_name) : '');
 
 async function safeJsonFetch(url, opts){
   try{
-    const resp = await fetch(url, opts);
-    const txt = await resp.text();
-    try { return JSON.parse(txt); } catch(e){
-      console.error('Invalid JSON response', txt); return { error: 'invalid_json', raw: txt };
-    }
-  } catch(err){
-    console.error('Network error', err);
-    return { error: 'network', message: String(err) };
-  }
+    const r = await fetch(url, opts);
+    const txt = await r.text();
+    try{ return JSON.parse(txt); } catch(e){ console.error('Invalid JSON', txt); return { error:'invalid_json', raw:txt }; }
+  } catch(err){ console.error('Network', err); return { error:'network', message:String(err) }; }
 }
 
-/* load all bookings for blocking UI */
+/* Load bookings to mark occupied slots */
 async function loadAllBookings(){
-  if(!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL === 'REPLACE_WITH_YOUR_WEB_APP_URL'){
-    console.warn('Google script URL is not set.');
-    return;
-  }
-  const url = GOOGLE_SCRIPT_URL + '?action=getBookings';
-  const data = await safeJsonFetch(url, { cache:'no-store' });
-  bookedSlots = {};
-  todayBookings = [];
-  if(data && Array.isArray(data.bookings)){
-    data.bookings.forEach(b=>{
-      const t = toHHMM(b.time || '');
+  if(!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL==='REPLACE_WITH_YOUR_WEB_APP_URL'){ console.warn('GAS URL not set'); return; }
+  const res = await safeJsonFetch(GOOGLE_SCRIPT_URL + '?action=getBookings', { cache:'no-store' });
+  bookedSlots = {}; todayBookings = [];
+  if(res && Array.isArray(res.bookings)){
+    res.bookings.forEach(b=>{
+      const t = toHHMM(b.time||'');
       const key = `${b.date}_${t}`;
       bookedSlots[key] = true;
-      todayBookings.push({ date: b.date, time: t, phone: normalizePhone(b.phone||''), userId: b.userId || '' });
+      todayBookings.push({ date:b.date, time:t, phone: normalizePhone(b.phone||''), userId: b.userId || '' });
     });
   } else {
-    // handle error gracefully — leave maps empty
-    if(data && data.error) console.warn('loadAllBookings error', data);
+    if(res && res.error) console.warn('loadAllBookings error', res);
   }
-  // re-render times if needed
   if(selectedDate) renderTimes();
 }
 
-/* get user's bookings by userId OR phone */
-async function loadMyBookings(){
-  if(!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL === 'REPLACE_WITH_YOUR_WEB_APP_URL'){
-    myBookingsBody.innerHTML = '<div class="muted">Не задан URL веб-приложения (Google Apps Script).</div>';
-    myBookingsCard.classList.remove('hidden'); bookingCard.classList.add('hidden'); return;
+/* Open My Bookings modal */
+async function openMyBookings(){
+  if(!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL==='https://script.google.com/macros/s/AKfycbyAZLUA2FDiAzMx6f4wmaqD2eKHOd38SZ45z_4chPg_ad2vtXJ8qhq_EkYTw5Cj61w/exec'){
+    showModal(`<h2>Мои записи</h2><p class="muted">URL веб-приложения не задан. Проверь конфигурацию.</p><div style="display:flex;gap:8px;margin-top:12px"><button onclick="closeModal()" class="btn-ghost">Закрыть</button></div>`);
+    return;
   }
 
-  // prefer userId, else phone from input (normalized)
   const phone = normalizePhone(phoneInput.value);
   let qs = '?action=getUserBookings';
   if(userId) qs += '&userId=' + encodeURIComponent(String(userId));
   else if(phone) qs += '&phone=' + encodeURIComponent(String(phone));
-  else {
-    myBookingsBody.innerHTML = '<div class="muted">Введите телефон или откройте бота в Telegram для идентификации.</div>';
-    myBookingsCard.classList.remove('hidden'); bookingCard.classList.add('hidden'); return;
-  }
+  else { showModal(`<h2>Мои записи</h2><p class="muted">Введите номер телефона или откройте бота в Telegram.</p><div style="display:flex;gap:8px;margin-top:12px"><button onclick="closeModal()" class="btn-ghost">Закрыть</button></div>`); return; }
 
-  myBookingsBody.innerHTML = '<div class="muted">Загрузка...</div>';
-  const data = await safeJsonFetch(GOOGLE_SCRIPT_URL + qs, { cache:'no-store' });
+  showModal(`<h2>Мои записи</h2><p class="muted">Загрузка...</p>`);
+  const res = await safeJsonFetch(GOOGLE_SCRIPT_URL + qs, { cache:'no-store' });
 
-  myBookingsBody.innerHTML = '';
-  if(data && Array.isArray(data.bookings) && data.bookings.length>0){
-    // sort by date/time
-    data.bookings.sort((a,b)=>{
-      const ka = (a.date||'') + 'T' + toHHMM(a.time||'00:00');
-      const kb = (b.date||'') + 'T' + toHHMM(b.time||'00:00');
-      return ka.localeCompare(kb);
-    });
-    data.bookings.forEach(b=>{
-      const item = document.createElement('div');
-      item.className = 'booking-item';
-      const left = document.createElement('div'); left.className='left';
-      left.innerHTML = `<div style="font-weight:800">${formatForUI(b.date)} — ${toHHMM(b.time)}</div>
-                        <div class="small">${b.name ? b.name + ' • ' : ''}${b.phone ? normalizePhone(b.phone) : ''}</div>`;
-      const right = document.createElement('div'); right.className='small muted';
-      right.textContent = b.created ? String(b.created) : '';
-      item.appendChild(left); item.appendChild(right);
-      myBookingsBody.appendChild(item);
-    });
+  if(res && Array.isArray(res.bookings) && res.bookings.length>0){
+    // render list
+    const items = res.bookings.sort((a,b)=> (a.date + a.time).localeCompare(b.date + b.time)).map(b=>{
+      return `<div class="booking-item"><div class="left"><div style="font-weight:800">${formatForUI(b.date)} — ${toHHMM(b.time)}</div><div class="small">${b.name || ''} ${b.phone ? '• ' + normalizePhone(b.phone) : ''}</div></div><div class="small muted">${b.created || ''}</div></div>`;
+    }).join('');
+    showModal(`<h2>Мои записи</h2><div class="booking-list">${items}</div><div style="display:flex;gap:8px;margin-top:12px" class="actions"><button onclick="closeModal()" class="btn-ghost">Закрыть</button></div>`);
   } else {
-    const text = (data && data.bookings && data.bookings.length===0) ? 'У вас нет записей' :
-                 (data && data.error) ? ('Ошибка: ' + (data.message || data.error)) : 'Нет данных';
-    myBookingsBody.innerHTML = `<div class="muted">${text}</div>`;
+    const msg = (res && res.bookings && res.bookings.length===0) ? 'У вас нет записей' : (res && res.error ? 'Ошибка: ' + (res.message || res.error) : 'Нет данных');
+    showModal(`<h2>Мои записи</h2><p class="muted">${msg}</p><div style="display:flex;gap:8px;margin-top:12px"><button onclick="closeModal()" class="btn-ghost">Закрыть</button></div>`);
   }
-
-  myBookingsCard.classList.remove('hidden');
-  bookingCard.classList.add('hidden');
 }
 
-/* send booking (form-urlencoded to avoid CORS preflight) */
+/* Send booking */
 async function sendBooking(){
   if(sending) return;
   const name = nameInput.value.trim();
   const phone = normalizePhone(phoneInput.value);
   if(!name || !phone || !selectedDate || !selectedTime) return updateSubmit();
 
-  // local check: limit 1 per day by phone or userId
+  // local check: already booked this day by phone or userId
   const conflict = todayBookings.some(b => b.date === selectedDate && (b.phone === phone || (userId && String(b.userId) === String(userId))));
-  if(conflict){
-    showError('Вы уже записаны на этот день (по номеру телефона или Telegram ID).');
-    return;
-  }
+  if(conflict){ showModal(`<h2>Ошибка</h2><p class="muted">Вы уже записаны на этот день (по номеру или Telegram ID).</p><div style="display:flex;gap:8px;margin-top:12px"><button onclick="closeModal()" class="btn-ghost">Закрыть</button></div>`); return; }
 
-  sending = true; updateSubmit();
-  submitBtn.textContent = 'Отправка...';
+  sending = true; updateSubmit(); submitBtn.textContent = 'Отправка...';
 
   const params = new URLSearchParams();
   params.append('action','addBooking');
@@ -436,22 +336,19 @@ async function sendBooking(){
   params.append('userId', userId || '');
   params.append('username', username || '');
 
-  const opts = {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
+  const res = await safeJsonFetch(GOOGLE_SCRIPT_URL, {
+    method:'POST',
+    headers:{ 'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8' },
     body: params.toString()
-  };
-
-  const res = await safeJsonFetch(GOOGLE_SCRIPT_URL, opts);
+  });
 
   if(res && res.status === 'success'){
-    showSuccess({ name, phone, date: selectedDate, time: selectedTime });
-    // refresh booked slots to mark slot as taken
+    showModal(`<h2>Запись подтверждена</h2><p class="muted">${name} • ${phone}</p><p>Дата: <strong>${formatForUI(selectedDate)}</strong></p><p>Время: <strong>${selectedTime}</strong></p><div style="display:flex;gap:8px;margin-top:12px"><button onclick="closeModal()" class="btn-ghost">Закрыть</button></div>`);
+    // refresh slots so it becomes disabled
     await loadAllBookings();
   } else {
-    const message = (res && res.message) ? res.message : 'Ошибка сервера или сети';
-    showError(message);
-    // refresh bookings in case server state changed
+    const msg = (res && res.message) ? res.message : 'Ошибка сервера или сети';
+    showModal(`<h2>Ошибка</h2><p class="muted">${msg}</p><div style="display:flex;gap:8px;margin-top:12px"><button onclick="closeModal()" class="btn-ghost">Закрыть</button></div>`);
     await loadAllBookings();
   }
 
@@ -459,25 +356,19 @@ async function sendBooking(){
   updateSubmit();
 }
 
-/* ============== Event wiring ============== */
+/* events */
 submitBtn.addEventListener('click', sendBooking);
-myBookingsBtn.addEventListener('click', loadMyBookings);
+myBookingsBtn.addEventListener('click', openMyBookings);
 
-/* update when tab becomes visible (user returned) */
+/* visibility refresh */
 document.addEventListener('visibilitychange', ()=>{
-  if(!document.hidden){
-    // refresh booked slots to keep UI fresh
-    loadAllBookings().catch(()=>{/* ignore */});
-  }
+  if(!document.hidden) loadAllBookings().catch(()=>{});
 });
 
 /* init */
 (async function init(){
   renderDates();
-  if(tgUser.first_name){
-    nameInput.value = tgUser.first_name + (tgUser.last_name ? (' ' + tgUser.last_name) : '');
-  }
-  // initial load of bookings
+  if(tgUser.first_name) nameInput.value = tgUser.first_name + (tgUser.last_name ? (' ' + tgUser.last_name) : '');
   await loadAllBookings();
   updateSubmit();
 })();
