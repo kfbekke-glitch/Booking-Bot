@@ -1,505 +1,410 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Барбершоп — Запись</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #ece9ff 0%, #f7f5ff 100%);
-            padding: 16px;
-            min-height: 100vh;
-        }
-
-        .container {
-            max-width: 500px;
-            margin: 0 auto;
-        }
-
-        .card {
-            background: #ffffff;
-            border-radius: 20px;
-            box-shadow: 0 8px 30px rgba(0,0,0,0.1);
-            overflow: hidden;
-            margin-bottom: 20px;
-        }
-
-        .header {
-            padding: 24px;
-            background: linear-gradient(135deg, #7b2ff7 0%, #4c72ff 100%);
-            color: white;
-        }
-
-        .header-title {
-            font-size: 24px;
-            font-weight: 700;
-        }
-
-        .header-subtitle {
-            opacity: 0.9;
-            margin-top: 4px;
-        }
-
-        .form {
-            padding: 20px;
-        }
-
-        .form-group {
-            margin-bottom: 22px;
-        }
-
-        .label {
-            font-size: 14px;
-            color: #444;
-            font-weight: 600;
-            margin-bottom: 8px;
-        }
-
-        input {
-            width: 100%;
-            border: 2px solid #ddd;
-            padding: 12px 14px;
-            border-radius: 12px;
-            font-size: 16px;
-            outline: none;
-            transition: 0.2s;
-        }
-
-        input:focus {
-            border-color: #7b2ff7;
-        }
-
-        .dates-grid {
-            display: grid;
-            grid-template-columns: repeat(2,1fr);
-            gap: 10px;
-        }
-
-        .btn-date {
-            background: #f0f0f6;
-            border: none;
-            border-radius: 12px;
-            padding: 12px;
-            font-size: 14px;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-
-        .btn-date:hover {
-            background: #e1e1ec;
-        }
-
-        .btn-date.active {
-            background: linear-gradient(135deg,#7b2ff7,#4c72ff);
-            color: white;
-            font-weight: 700;
-        }
-
-        .times-grid {
-            display: grid;
-            grid-template-columns: repeat(3,1fr);
-            gap: 10px;
-        }
-
-        .time-btn {
-            background: #f0f0f6;
-            border: none;
-            padding: 12px 0;
-            border-radius: 12px;
-            cursor: pointer;
-            font-size: 15px;
-            transition: 0.2s;
-        }
-
-        .time-btn.active {
-            background: linear-gradient(135deg,#7b2ff7,#4c72ff);
-            color: white;
-            font-weight: bold;
-        }
-
-        .time-btn.disabled {
-            background: #ffd6d6;
-            color: #a60000;
-            pointer-events: none;
-            position: relative;
-        }
-
-        .confirm-btn {
-            margin-top: 20px;
-            width: 100%;
-            background: linear-gradient(135deg,#00c26f,#009a54);
-            border: none;
-            padding: 16px;
-            border-radius: 14px;
-            color: white;
-            font-size: 17px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-
-        .confirm-btn:disabled {
-            opacity: 0.4;
-            cursor: not-allowed;
-        }
-
-        .success-screen,
-        .error-screen {
-            padding: 30px;
-            text-align: center;
-        }
-
-        .info-block {
-            text-align: center;
-            font-size: 14px;
-            color: #666;
-            margin-top: 30px;
-        }
-    </style>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Барбершоп — Запись</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+  *{box-sizing:border-box}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;background:linear-gradient(135deg,#f3f5ff 0,#fff 100%);margin:0;padding:18px;color:#1f2937}
+  .container{max-width:520px;margin:0 auto}
+  .card{background:#fff;border-radius:18px;box-shadow:0 10px 30px rgba(20,20,50,0.06);overflow:hidden;margin-bottom:18px}
+  .header{padding:22px 24px;background:linear-gradient(135deg,#6b21a8,#2563eb);color:#fff}
+  .header h1{margin:0;font-size:20px}
+  .header p{margin:6px 0 0 0;opacity:.95;font-size:13px}
+  .form{padding:20px}
+  .form-group{margin-bottom:18px}
+  label.label{display:block;font-weight:700;margin-bottom:8px;color:#374151}
+  input[type="text"],input[type="tel"]{width:100%;padding:12px;border-radius:10px;border:1px solid #e6e9f2;font-size:15px}
+  .dates-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+  .btn-date{padding:12px;border-radius:12px;border:0;background:#f3f4f6;cursor:pointer;font-weight:600}
+  .btn-date.active{background:linear-gradient(90deg,#7c3aed,#06b6d4);color:#fff;box-shadow:0 8px 24px rgba(59,130,246,.12);transform:translateY(-2px)}
+  .times-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  .time-btn{padding:12px 6px;border-radius:12px;border:0;background:#f3f4f6;cursor:pointer;font-weight:600}
+  .time-btn.active{background:linear-gradient(90deg,#7c3aed,#06b6d4);color:#fff}
+  .time-btn.disabled{background:#fff0f0;color:#9b1c1c;cursor:not-allowed;box-shadow:none;border:1px solid rgba(220,38,38,0.08)}
+  .confirm-row{padding:16px 20px}
+  .confirm-btn{width:100%;padding:14px;border-radius:12px;border:0;background:linear-gradient(90deg,#10b981,#059669);color:#fff;font-weight:800;font-size:16px;cursor:pointer}
+  .confirm-btn:disabled{opacity:.45;cursor:not-allowed}
+  .info{padding:12px 20px;text-align:center;color:#6b7280;font-size:13px}
+  /* success / error */
+  .result-card{padding:28px 20px;text-align:center;border-radius:16px}
+  .success{background:linear-gradient(180deg,#f0fff6,#ffffff);color:#064e3b}
+  .error{background:linear-gradient(180deg,#fff5f5,#ffffff);color:#7f1d1d}
+  .result-card h2{margin:0 0 8px 0;font-size:20px}
+  .result-card p{margin:6px 0;color:inherit}
+  /* small helpers */
+  .muted{color:#6b7280;font-size:13px}
+  .hidden{display:none}
+</style>
 </head>
 <body>
-
 <div class="container">
-
-    <!-- БЛОК БРОНИРОВАНИЯ -->
-    <div class="card" id="bookingScreen">
-        <div class="header">
-            <div class="header-title">Барбершоп</div>
-            <div class="header-subtitle">Запись на стрижку</div>
-        </div>
-
-        <div class="form">
-
-            <div class="form-group">
-                <div class="label">Ваше имя</div>
-                <input type="text" id="nameInput" placeholder="Введите ваше имя">
-            </div>
-
-            <div class="form-group">
-                <div class="label">Телефон</div>
-                <input type="tel" id="phoneInput" placeholder="+7 (999) 123-45-67" value="+7 ">
-            </div>
-
-            <div class="form-group">
-                <div class="label">Выберите дату</div>
-                <div class="dates-grid" id="datesGrid"></div>
-            </div>
-
-            <div class="form-group" id="timeBlock" style="display:none;">
-                <div class="label">Выберите время</div>
-                <div class="times-grid" id="timesGrid"></div>
-            </div>
-
-            <button class="confirm-btn" id="submitBtn" disabled>Подтвердить запись</button>
-
-        </div>
+  <div id="bookingCard" class="card">
+    <div class="header">
+      <h1>Барбершоп</h1>
+      <p>Удобная запись — 1 раз в день. Проверка по телефону и Telegram ID.</p>
     </div>
+    <div class="form">
+      <div class="form-group">
+        <label class="label">Ваше имя</label>
+        <input id="nameInput" type="text" placeholder="Введите ваше имя">
+      </div>
+      <div class="form-group">
+        <label class="label">Телефон</label>
+        <input id="phoneInput" type="tel" placeholder="+7 (999) 123-45-67" value="+7 ">
+      </div>
 
-    <!-- ЭКРАН УСПЕХА -->
-    <div class="card hidden" id="successScreen">
-        <div class="success-screen">
-            <h2>Запись подтверждена!</h2>
-            <p id="successName"></p>
-            <p id="successPhone"></p>
-            <p>Дата: <span id="successDate"></span></p>
-            <p>Время: <span id="successTime"></span></p>
-        </div>
+      <div class="form-group">
+        <label class="label">Выберите дату</label>
+        <div id="datesGrid" class="dates-grid"></div>
+      </div>
+
+      <div id="timeBlock" class="form-group" style="display:none">
+        <label class="label">Выберите время</label>
+        <div id="timesGrid" class="times-grid"></div>
+      </div>
+
+      <div class="confirm-row">
+        <button id="submitBtn" class="confirm-btn" disabled>Подтвердить запись</button>
+      </div>
     </div>
+  </div>
 
-    <!-- ЭКРАН ОШИБКИ -->
-    <div class="card hidden" id="errorScreen">
-        <div class="error-screen">
-            <h2 style="color:#a60000;">Ошибка</h2>
-            <p id="errorText"></p>
-        </div>
+  <div id="successCard" class="card hidden">
+    <div class="result-card success">
+      <h2>Запись подтверждена!</h2>
+      <p id="successName" class="muted"></p>
+      <p id="successPhone" class="muted"></p>
+      <p>Дата: <strong id="successDate"></strong></p>
+      <p>Время: <strong id="successTime"></strong></p>
     </div>
+  </div>
 
-    <div class="info-block">
-        📍 ул. Примерная, 123<br>
-        📞 +7 (999) 123-45-67<br>
-        ⏰ Пн-Вс: 09:00-19:00
+  <div id="errorCard" class="card hidden">
+    <div class="result-card error">
+      <h2>Ошибка</h2>
+      <p id="errorMessage" class="muted"></p>
     </div>
+  </div>
 
+  <div class="info">
+    📍 ул. Примерная, 123 — Пн–Вс 09:00–19:00
+  </div>
 </div>
+
 <script>
-    let tg = window.Telegram.WebApp;
-    tg.expand();
+/* ====== Конфиг - замените URL на ваш Web App URL ====== */
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbytvAbi0Zk2BNNIYk4VtU3devO2qv7tRJACXxZyqsVmVVdLBHovHihqXn7lr50eDfNT/exec";
+/* ===================================================== */
 
-    const GOOGLE_SCRIPT_URL =
-        "https://script.google.com/macros/s/AKfycbzvtmJgT7xdpsPzXV-MlBqvLIZrrn9sal37Y19j-pjf-wPENKniCououhj4GMFOGLzR/exec";
+const tg = window.Telegram?.WebApp || null;
+if (tg) {
+  try { tg.ready(); tg.expand(); } catch(e){}
+  // Скрываем MainButton если он есть
+  try { if (tg.MainButton) tg.MainButton.hide(); } catch(e){}
+}
 
-    const allSlots = [
-        "09:00", "10:00", "11:00", "12:00",
-        "13:00", "14:00", "15:00", "16:00",
-        "17:00", "18:00"
-    ];
+const allTimeSlots = ['09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00'];
 
-    let selectedDate = "";
-    let selectedTime = "";
-    let bookedSlots = {};  // { '2025-11-20_09:00': true }
-    let todayBookings = []; // список записей всех пользователей (для лимита)
+const nameInput = document.getElementById('nameInput');
+const phoneInput = document.getElementById('phoneInput');
+const datesGrid = document.getElementById('datesGrid');
+const timesGrid = document.getElementById('timesGrid');
+const timeBlock = document.getElementById('timeBlock');
+const submitBtn = document.getElementById('submitBtn');
 
-    const nameInput = document.getElementById("nameInput");
-    const phoneInput = document.getElementById("phoneInput");
-    const datesGrid = document.getElementById("datesGrid");
-    const timesGrid = document.getElementById("timesGrid");
-    const timeBlock = document.getElementById("timeBlock");
-    const submitBtn = document.getElementById("submitBtn");
+const successCard = document.getElementById('successCard');
+const bookingCard = document.getElementById('bookingCard');
+const errorCard = document.getElementById('errorCard');
+const errorMessage = document.getElementById('errorMessage');
 
-    const userId = tg.initDataUnsafe?.user?.id || null;
-    const username = tg.initDataUnsafe?.user?.username || null;
+const successName = document.getElementById('successName');
+const successPhone = document.getElementById('successPhone');
+const successDateEl = document.getElementById('successDate');
+const successTimeEl = document.getElementById('successTime');
 
+let bookedSlots = {}; // { '2025-11-17_09:00': true }
+let todayBookings = []; // [{name,phone,date,time,userId}]
+let selectedDate = '';
+let selectedTime = '';
+let sending = false;
 
-    /* ================================
-       АВТОПОДСТАНОВКА ИМЕНИ
-    ================================= */
-    if (tg.initDataUnsafe?.user?.first_name) {
-        nameInput.value =
-            tg.initDataUnsafe.user.first_name +
-            (tg.initDataUnsafe.user.last_name ? " " + tg.initDataUnsafe.user.last_name : "");
+const tgUser = tg?.initDataUnsafe?.user || {};
+let userId = tgUser.id || null;
+let username = tgUser.username || null;
+
+/* ===== helpers ===== */
+function isoDate(d){ const y=d.getFullYear(); const m=String(d.getMonth()+1).padStart(2,'0'); const day=String(d.getDate()).padStart(2,'0'); return `${y}-${m}-${day}`; }
+function pad2(n){ return String(n).padStart(2,'0'); }
+function nowPlusHours(h){ const d=new Date(); d.setHours(d.getHours()+h); return d; }
+function toHHMM(t){ // normalize input to HH:MM
+  if (!t) return '';
+  t = String(t).trim();
+  if (/:/.test(t)){
+    const parts = t.split(':').map(s=>s.replace(/\D/g,''));
+    const hh = pad2(parts[0]||'0'); const mm = pad2(parts[1]||'0');
+    return `${hh}:${mm}`;
+  } else {
+    // e.g. "9" or "900"
+    if (t.length<=2) return pad2(t)+':00';
+    if (t.length===3) return '0'+t[0]+':'+t.slice(1);
+    if (t.length===4) return t.slice(0,2)+':'+t.slice(2);
+    return t;
+  }
+}
+function formatForUI(dateStr){
+  const d = new Date(dateStr + 'T00:00:00');
+  const today = isoDate(new Date());
+  const tomorrow = isoDate(new Date(Date.now()+24*3600*1000));
+  if (dateStr === today) return 'Сегодня';
+  if (dateStr === tomorrow) return 'Завтра';
+  return d.toLocaleDateString('ru-RU',{weekday:'short',day:'numeric',month:'short'});
+}
+function normalizePhone(raw){
+  if(!raw) return '';
+  let s = String(raw).replace(/\D/g,'');
+  if (s.length===11 && s[0]==='8') s = '7'+s.slice(1);
+  if (s.length===10) s = '7'+s;
+  if (s.length!==11) return s;
+  return '+'+s;
+}
+
+/* ===== generate dates (7 days) ===== */
+function getNextDays(){
+  const out=[];
+  const today = new Date();
+  for(let i=0;i<7;i++){
+    const d = new Date();
+    d.setDate(today.getDate()+i);
+    out.push(isoDate(d));
+  }
+  return out;
+}
+
+/* ===== render dates ===== */
+function renderDates(){
+  datesGrid.innerHTML = '';
+  const days = getNextDays();
+  days.forEach(d=>{
+    const btn = document.createElement('button');
+    btn.className = 'btn-date';
+    btn.textContent = formatForUI(d);
+    btn.dataset.date = d;
+    btn.addEventListener('click', (ev)=>{
+      selectDate(d, ev.currentTarget);
+    });
+    datesGrid.appendChild(btn);
+  });
+}
+
+/* ===== load bookings from GAS (GET?action=getBookings) ===== */
+async function loadBookedSlots(){
+  try{
+    const resp = await fetch(GOOGLE_SCRIPT_URL + '?action=getBookings', {cache:'no-store'});
+    const data = await resp.json();
+    bookedSlots = {};
+    todayBookings = [];
+    if (data && Array.isArray(data.bookings)){
+      data.bookings.forEach(b=>{
+        const timeNorm = toHHMM(b.time || '');
+        const key = `${b.date}_${timeNorm}`;
+        bookedSlots[key] = true;
+        todayBookings.push({ name: b.name || '', phone: normalizePhone(b.phone||''), date: b.date||'', time: timeNorm, userId: b.userId || '' });
+      });
     }
+    // if a date is already selected - re-render times
+    if (selectedDate) renderTimes();
+  }catch(err){
+    console.error('loadBookedSlots error', err);
+  }
+}
 
+/* ===== compute available time slots: ensure slot >= now + 1 hour ===== */
+function getAvailableTimeSlotsForDate(dateStr){
+  const now = new Date();
+  const threshold = new Date(now.getTime() + 60*60*1000); // now + 1 hour
+  return allTimeSlots.filter(slot=>{
+    const slotParts = slot.split(':').map(n=>parseInt(n,10));
+    const slotDate = new Date(dateStr + 'T00:00:00');
+    slotDate.setHours(slotParts[0], slotParts[1]||0, 0, 0);
+    // if slot already booked -> unavailable
+    if (bookedSlots[`${dateStr}_${slot}`]) return false;
+    // if slot datetime < threshold -> unavailable
+    if (slotDate < threshold) return false;
+    return true;
+  });
+}
 
-    /* ================================
-       ФОРМАТИРОВАНИЕ ТЕЛЕФОНА
-    ================================= */
-    phoneInput.addEventListener("input", (e) => {
-        let v = e.target.value.replace(/\D/g, "");
-        if (!v.startsWith("7")) v = "7" + v.replace(/^7+/, "");
-        v = v.slice(0, 11);
+/* ===== render times ===== */
+function renderTimes(){
+  timesGrid.innerHTML = '';
+  if (!selectedDate) return;
+  const avail = getAvailableTimeSlotsForDate(selectedDate);
+  allTimeSlots.forEach(slot=>{
+    const btn = document.createElement('button');
+    btn.className = 'time-btn';
+    btn.textContent = slot;
+    // normalize key
+    const key = `${selectedDate}_${slot}`;
+    if (bookedSlots[key]){
+      btn.classList.add('disabled');
+      btn.title = 'Занято';
+    } else {
+      // check threshold: is slot in avail?
+      if (!avail.includes(slot)){
+        btn.classList.add('disabled');
+        btn.title = 'Прошло или слишком близко';
+      } else {
+        btn.addEventListener('click', (ev)=> selectTime(slot, ev.currentTarget));
+      }
+    }
+    timesGrid.appendChild(btn);
+  });
+}
 
-        let formatted = "+7 ";
-        if (v.length > 1) formatted += "(" + v.slice(1, 4);
-        if (v.length >= 5) formatted += ") " + v.slice(4, 7);
-        if (v.length >= 8) formatted += "-" + v.slice(7, 9);
-        if (v.length >= 10) formatted += "-" + v.slice(9, 11);
+/* ===== select date/time handlers ===== */
+function selectDate(date, el){
+  selectedDate = date;
+  selectedTime = '';
+  // active class
+  document.querySelectorAll('.btn-date').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  // show grid
+  timeBlock.style.display = 'block';
+  // reload slots (in case server updated)
+  loadBookedSlots().then(()=> renderTimes());
+  updateSubmitButton();
+}
 
-        e.target.value = formatted;
+function selectTime(time, el){
+  selectedTime = toHHMM(time);
+  document.querySelectorAll('.time-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  updateSubmitButton();
+}
 
-        updateSubmitButton();
+/* ===== validation / limit check ===== */
+function isLimitExceededByPhoneOrUser(phone, uid, dateStr){
+  // dateStr in yyyy-mm-dd
+  return todayBookings.some(b => {
+    if (b.date !== dateStr) return false;
+    if (b.userId && uid && String(b.userId) === String(uid)) return true;
+    if (b.phone && phone && b.phone === phone) return true;
+    return false;
+  });
+}
+
+function updateSubmitButton(){
+  const name = nameInput.value.trim();
+  const phoneDigits = phoneInput.value.replace(/\D/g,'');
+  const valid = name.length>1 && phoneDigits.length===11 && selectedDate && selectedTime && !sending;
+  submitBtn.disabled = !valid;
+}
+
+/* ===== phone formatting listeners ===== */
+phoneInput.addEventListener('input', e=>{
+  let v = e.target.value.replace(/\D/g,'');
+  if (!v.startsWith('7')) v = '7' + v.replace(/^7+/,'');
+  v = v.slice(0,11);
+  let formatted = '+7 ';
+  if (v.length>1) formatted += '('+v.slice(1,4);
+  if (v.length>=5) formatted += ') '+v.slice(4,7);
+  if (v.length>=8) formatted += '-'+v.slice(7,9);
+  if (v.length>=10) formatted += '-'+v.slice(9,11);
+  e.target.value = formatted;
+  updateSubmitButton();
+});
+
+/* prefill name from tg user if available */
+if (tg?.initDataUnsafe?.user){
+  const u = tg.initDataUnsafe.user;
+  if (u.first_name && !nameInput.value) nameInput.value = u.first_name + (u.last_name ? ' '+u.last_name : '');
+}
+
+/* ===== send booking (URL-encoded to avoid preflight) ===== */
+async function sendBooking(){
+  if (sending) return;
+  const name = nameInput.value.trim();
+  const phone = normalizePhone(phoneInput.value);
+  if (!name || !phone || !selectedDate || !selectedTime) return;
+
+  // check local limit
+  if (isLimitExceededByPhoneOrUser(phone, userId, selectedDate)){
+    showError('Вы уже записаны на этот день (по телефону или Telegram ID).');
+    return;
+  }
+
+  sending = true;
+  updateSubmitButton();
+  submitBtn.textContent = 'Отправка...';
+
+  const payload = {
+    action: 'addBooking',
+    name: name,
+    phone: phone,
+    date: selectedDate,
+    time: selectedTime,
+    userId: userId || '',
+    username: username || ''
+  };
+
+  try {
+    const form = new URLSearchParams();
+    for (const k in payload) form.append(k, payload[k]);
+
+    const resp = await fetch(GOOGLE_SCRIPT_URL, {
+      method: 'POST',
+      headers: {'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},
+      body: form.toString(),
+      cache:'no-store'
     });
 
+    const result = await resp.json();
 
-    /* ================================
-       ГЕНЕРАЦИЯ БЛИЖАЙШИХ 7 ДНЕЙ
-    ================================= */
-    function getDates() {
-        const days = [];
-        const now = new Date();
-
-        for (let i = 0; i < 7; i++) {
-            let d = new Date();
-            d.setDate(now.getDate() + i);
-            days.push(d.toISOString().split("T")[0]);
-        }
-        return days;
+    if (result && result.status === 'success'){
+      // success UI
+      bookingCard.classList.add('hidden');
+      successCard.classList.remove('hidden');
+      successName.textContent = name;
+      successPhone.textContent = phone;
+      successDateEl.textContent = formatForUI(selectedDate);
+      successTimeEl.textContent = selectedTime;
+      // refresh booked slots
+      await loadBookedSlots();
+    } else {
+      const msg = (result && result.message) ? result.message : 'Сервер вернул ошибку';
+      showError(msg);
+      // refresh slots in case server reports slot busy
+      await loadBookedSlots();
     }
+  } catch(err){
+    console.error('send error', err);
+    showError('Ошибка сети при отправке. Попробуйте позже.');
+  } finally {
+    sending = false;
+    submitBtn.textContent = 'Подтвердить запись';
+    updateSubmitButton();
+  }
+}
 
-    function formatDate(dateStr) {
-        const date = new Date(dateStr);
-        return date.toLocaleDateString("ru-RU", { weekday: "short", day: "numeric", month: "short" });
-    }
+function showError(msg){
+  errorMessage.textContent = msg;
+  bookingCard.classList.add('hidden');
+  errorCard.classList.remove('hidden');
+}
 
+/* wire events */
+submitBtn.addEventListener('click', sendBooking);
 
-    /* ================================
-       РЕНДЕР ДАТ
-    ================================= */
-    function renderDates() {
-        const days = getDates();
-
-        datesGrid.innerHTML = "";
-
-        days.forEach((d) => {
-            let btn = document.createElement("button");
-            btn.className = "btn-date";
-            btn.textContent = formatDate(d);
-            btn.onclick = () => selectDate(d);
-
-            datesGrid.appendChild(btn);
-        });
-    }
-
-
-    /* ================================
-       РЕНДЕР ВРЕМЕНИ
-    ================================= */
-    function renderTimes() {
-        timesGrid.innerHTML = "";
-
-        allSlots.forEach((t) => {
-            let key = `${selectedDate}_${t}`;
-            let btn = document.createElement("button");
-
-            btn.className = "time-btn";
-            btn.textContent = t;
-
-            if (bookedSlots[key]) {
-                btn.classList.add("disabled");
-            } else {
-                btn.onclick = () => selectTime(t);
-            }
-
-            timesGrid.appendChild(btn);
-        });
-    }
-
-
-    /* ================================
-       ВЫБОР ДАТЫ
-    ================================= */
-    function selectDate(date) {
-        selectedDate = date;
-        selectedTime = "";
-
-        [...datesGrid.children].forEach((b) => b.classList.remove("active"));
-        event.target.classList.add("active");
-
-        timeBlock.style.display = "block";
-
-        renderTimes();
-        updateSubmitButton();
-    }
-
-
-    /* ================================
-       ВЫБОР ВРЕМЕНИ
-    ================================= */
-    function selectTime(time) {
-        selectedTime = time;
-
-        [...timesGrid.children].forEach((b) => b.classList.remove("active"));
-        event.target.classList.add("active");
-
-        updateSubmitButton();
-    }
-
-
-    /* ================================
-       ПРОВЕРКА ЛИМИТА (1 запись в день)
-    ================================= */
-    function isLimitExceeded(phone, userId) {
-        const today = new Date().toISOString().split("T")[0];
-
-        const byPhone = todayBookings.some(
-            (b) => b.phone === phone && b.date === today
-        );
-
-        const byUser = todayBookings.some(
-            (b) => b.userId === String(userId) && b.date === today
-        );
-
-        return byPhone || byUser;
-    }
-
-
-    /* ================================
-       АКТИВАЦИЯ КНОПКИ
-    ================================= */
-    function updateSubmitButton() {
-        const name = nameInput.value.trim();
-        const phone = phoneInput.value.replace(/\D/g, "");
-
-        const valid =
-            name.length > 1 &&
-            phone.length === 11 &&
-            selectedDate &&
-            selectedTime;
-
-        submitBtn.disabled = !valid;
-    }
-
-
-    /* ================================
-       ЗАГРУЗКА ЗАНЯТЫХ СЛОТОВ
-    ================================= */
-    async function loadBookedSlots() {
-        try {
-            const res = await fetch(GOOGLE_SCRIPT_URL + "?action=getBookings");
-            const data = await res.json();
-
-            bookedSlots = {};
-            todayBookings = [];
-
-            data.bookings.forEach((b) => {
-                let key = `${b.date}_${b.time}`;
-                bookedSlots[key] = true;
-                todayBookings.push(b);
-            });
-
-            renderTimes();
-        } catch (e) {
-            console.error("Ошибка загрузки:", e);
-        }
-    }
-
-    loadBookedSlots();
-    renderDates();
-
-    /* ================================
-       ОТПРАВКА ЗАПИСИ В GOOGLE SHEETS
-    ================================= */
-    async function sendBooking() {
-        const name = nameInput.value.trim();
-        const phone = phoneInput.value.replace(/\D/g, "");
-
-        if (isLimitExceeded(phone, userId)) {
-            tg.showAlert("Вы уже записаны сегодня! Можно 1 раз в день.");
-            return;
-        }
-
-        submitBtn.disabled = true;
-        submitBtn.textContent = "Отправка...";
-
-        const formData = new FormData();
-        formData.append("action", "addBooking");
-        formData.append("name", name);
-        formData.append("phone", phone);
-        formData.append("date", selectedDate);
-        formData.append("time", selectedTime);
-        formData.append("userId", userId);
-        formData.append("username", username || "");
-        formData.append("created", new Date().toLocaleString("ru-RU"));
-
-        try {
-            const res = await fetch(GOOGLE_SCRIPT_URL, {
-                method: "POST",
-                body: formData
-            });
-
-            const data = await res.json();
-
-            if (data.status === "success") {
-                tg.showPopup({
-                    title: "Запись создана",
-                    message:
-                        `Дата: ${selectedDate}\nВремя: ${selectedTime}\nМы вас ждём!`,
-                    buttons: [{ id: "ok", type: "ok" }]
-                });
-
-                loadBookedSlots();
-            } else {
-                tg.showAlert("Ошибка: " + data.message);
-            }
-        } catch (e) {
-            console.error(e);
-            tg.showAlert("Ошибка сети! Попробуйте позже.");
-        }
-
-        submitBtn.disabled = false;
-        submitBtn.textContent = "Подтвердить запись";
-    }
-
-    submitBtn.addEventListener("click", sendBooking);
+/* init */
+(async function init(){
+  renderDates();
+  await loadBookedSlots();
+  // initial button update
+  updateSubmitButton();
+})();
 </script>
-
 </body>
 </html>
