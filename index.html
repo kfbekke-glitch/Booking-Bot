@@ -6,6 +6,7 @@
 <title>Барбершоп — Запись</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
+/* (здесь — твои стили без изменений) */
 :root{--primary:#8b5cf6;--primary-dark:#7c3aed;--secondary:#06b6d4;--success:#10b981;--danger:#ef4444;--danger-soft:#fee2e2;--text:#1e293b;--text-muted:#64748b;--bg:#f8fafc;--card:#ffffff;--border:#e2e8f0}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);min-height:100vh;padding:16px;color:var(--text);background-size:200% 200%}
@@ -90,7 +91,7 @@ input:focus{outline:none;border-color:var(--primary);background:white;box-shadow
 
 <script>
 /* ---------- ВНИМАНИЕ: вставьте сюда URL вашего Web App (GAS) ---------- */
-const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby2cffUBvcRR4qCVcMJR10xOMeDToBidCYh8OpMsXhxdPds1euT-lLgMuquftAbDOt1/exec';
+const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxUiq9nV4ad9304fe1kG9xge940n_t6EJw3HDenBmcQNIacYid86pr1oDuOgJ6YutIg/exec';
 /* -------------------------------------------------------------------- */
 
 const ALL_SLOTS = ['09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00'];
@@ -182,6 +183,9 @@ async function loadBookings(){
           userId: String(b.userId||'')
         });
       });
+    } else {
+      // защита: если нет bookings — не ломаем UI
+      console.warn('loadBookings: unexpected response', json);
     }
     if(selectedDate) renderTimes();
   } catch(err){
@@ -198,6 +202,9 @@ function renderTimes(){
   const currentHour = now.getHours();
   const currentMinute = now.getMinutes();
 
+  // Проверка: если выбранная дата в прошлом (строковое сравнение YYYY-MM-DD корректно)
+  const isPastDate = selectedDate < today;
+
   ALL_SLOTS.forEach(slot=>{
     const btn = document.createElement('button');
     btn.className = 'time-btn';
@@ -205,8 +212,14 @@ function renderTimes(){
     const normalizedSlot = normalizeTime(slot);
     const key = `${selectedDate}_${normalizedSlot}`;
 
+    // Если дата прошла — делаем все слоты занятыми (красными + disabled)
+    if (isPastDate) {
+      btn.classList.add('booked');
+      btn.title = 'Прошедшая дата';
+      btn.disabled = true;
+    }
     // занят?
-    if(bookedSlots[key]){
+    else if(bookedSlots[key]){
       btn.classList.add('booked');
       btn.title = 'Занято';
       btn.disabled = true;
@@ -251,7 +264,10 @@ function selectTime(time, btn){
 function updateSubmit(){
   const name = nameInput.value.trim();
   const digits = phoneInput.value.replace(/\D/g,'');
-  const ok = name.length>1 && digits.length===11 && selectedDate && selectedTime && !sending;
+  // запрещаем submit если дата в прошлом
+  const today = isoDate(new Date());
+  const isPast = selectedDate && selectedDate < today;
+  const ok = name.length>1 && digits.length===11 && selectedDate && selectedTime && !sending && !isPast;
   submitBtn.disabled = !ok;
 }
 
@@ -268,6 +284,13 @@ async function sendBooking(){
     showModal(`<div class="modal-header"><h2>⚠️ Лимит записей</h2><p>Вы уже записаны на этот день</p></div>
       <div class="modal-body"><p>Можно записаться только один раз в день. Выберите другую дату или свяжитесь с нами.</p></div>
       <div class="modal-footer"><button class="btn-close" onclick="closeModal()">Понятно</button></div>`);
+    return;
+  }
+
+  // Защита: ещё раз не даём отправлять запись на прошлую дату (вдруг обход)
+  const todayStr = isoDate(new Date());
+  if (selectedDate < todayStr) {
+    showModal(`<div class="modal-header"><h2>❌ Неверная дата</h2><p>Нельзя записаться на прошедшую дату</p></div><div class="modal-footer"><button class="btn-close" onclick="closeModal()">Ок</button></div>`);
     return;
   }
 
@@ -342,14 +365,16 @@ async function openMyBookings(){
     const res = await fetch(GOOGLE_SCRIPT_URL + qs, {cache:'no-store'});
     const data = await res.json();
     if(data && Array.isArray(data.bookings) && data.bookings.length){
-      const items = data.bookings.sort((a,b) => (a.date+a.time).localeCompare(b.date+b.time)).map(b => {
-        return `<div style="padding:12px;border-radius:10px;background:#f8fafc;margin-bottom:10px;">
-          <div style="font-weight:800">${formatDateUI(b.date)} в ${normalizeTime(b.time)}</div>
-          <div style="margin-top:6px">${b.name||''}</div>
-          <div style="margin-top:4px">${normalizePhone(b.phone||'')}</div>
-          ${b.created?`<div style="margin-top:8px;font-size:12px;color:#64748b">Создано: ${b.created}</div>`:''}
-        </div>`;
-      }).join('');
+      const items = data.bookings
+        .sort((a,b) => (a.date + a.time).localeCompare(b.date + b.time))
+        .map(b => {
+          return `<div style="padding:12px;border-radius:10px;background:#f8fafc;margin-bottom:10px;">
+            <div style="font-weight:800">${formatDateUI(b.date)} в ${normalizeTime(b.time)}</div>
+            <div style="margin-top:6px">${b.name||''}</div>
+            <div style="margin-top:4px">${normalizePhone(b.phone||'')}</div>
+            ${b.created?`<div style="margin-top:8px;font-size:12px;color:#64748b">Создано: ${b.created}</div>`:''}
+          </div>`;
+        }).join('');
       showModal(`<div class="modal-header"><h2>📋 Мои записи</h2><p>Всего записей: ${data.bookings.length}</p></div><div class="modal-body">${items}</div><div class="modal-footer"><button class="btn-close" onclick="closeModal()">Закрыть</button></div>`);
     } else {
       showModal(`<div class="modal-header"><h2>📋 Мои записи</h2><p>Записей не найдено</p></div><div class="modal-body"><p>У вас пока нет активных записей</p></div><div class="modal-footer"><button class="btn-close" onclick="closeModal()">Закрыть</button></div>`);
@@ -364,6 +389,7 @@ async function openMyBookings(){
 phoneInput.addEventListener('input',(e)=>{
   let v = e.target.value.replace(/\D/g,'');
   if(!v.startsWith('7')) v = '7'+v.replace(/^7+/,'');
+
   v = v.slice(0,11);
   let fmt = '+7 ';
   if(v.length>1) fmt += '('+v.slice(1,4);
@@ -397,8 +423,11 @@ myBookingsBtn.addEventListener('click', openMyBookings);
     if(tg){ tg.ready(); if(tg.initDataUnsafe?.user?.first_name) nameInput.value = tg.initDataUnsafe.user.first_name; }
   } catch(e){}
 
+  // ставим дату по-умолчанию: сегодня и задаём min (чтобы нельзя было выбрать прошлое)
   const today = new Date();
-  datePicker.value = isoDate(today);
+  const todayStr = isoDate(today);
+  datePicker.value = todayStr;
+  datePicker.min = todayStr;
   selectedDate = datePicker.value;
   timeBlock.classList.remove('hidden');
 
