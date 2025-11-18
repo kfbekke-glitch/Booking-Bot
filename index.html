@@ -6,42 +6,405 @@
 <title>Барбершоп — Запись</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
-/* (здесь — твои стили без изменений) */
-:root{--primary:#8b5cf6;--primary-dark:#7c3aed;--secondary:#06b6d4;--success:#10b981;--danger:#ef4444;--danger-soft:#fee2e2;--text:#1e293b;--text-muted:#64748b;--bg:#f8fafc;--card:#ffffff;--border:#e2e8f0}
+:root{
+  --dark-bg: #0a0a0a;
+  --card-bg: #1a1a1a;
+  --card-lighter: #252525;
+  --accent-gold: #d4af37;
+  --accent-gold-dark: #b8941f;
+  --accent-red: #c9302c;
+  --text-light: #f5f5f5;
+  --text-muted: #888;
+  --border-dark: #333;
+  --success: #2ecc71;
+  --danger: #e74c3c;
+}
+
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);min-height:100vh;padding:16px;color:var(--text);background-size:200% 200%}
-.container{max-width:480px;margin:0 auto}
-.card{background:var(--card);border-radius:24px;box-shadow:0 20px 60px rgba(0,0,0,0.15);overflow:hidden}
-.header{background:linear-gradient(135deg,var(--primary),var(--secondary));padding:28px 24px;color:white;position:relative;overflow:hidden}
-.header h1{font-size:28px;font-weight:800;margin-bottom:8px}
-.header p{font-size:14px;opacity:0.95}
-.form{padding:24px}
-.form-group{margin-bottom:20px}
-.form-group label{display:block;font-weight:700;margin-bottom:8px;color:var(--text);font-size:14px}
-input[type="text"],input[type="tel"],input[type="date"]{width:100%;padding:14px 16px;border:2px solid var(--border);border-radius:12px;font-size:16px;transition:all 0.3s;background:var(--bg)}
-input:focus{outline:none;border-color:var(--primary);background:white;box-shadow:0 0 0 4px rgba(139,92,246,0.06)}
-.grid-dates{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
-.btn-date{padding:14px;border:2px solid var(--border);border-radius:14px;background:var(--bg);font-weight:700;font-size:15px;cursor:pointer;position:relative;overflow:hidden}
-.grid-times{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-.time-btn{padding:14px 8px;border:2px solid var(--border);border-radius:12px;background:var(--bg);font-weight:700;font-size:15px;cursor:pointer;position:relative}
-.time-btn:hover:not(.booked):not(.disabled){transform:scale(1.05);border-color:var(--primary);background:white}
-.time-btn.active{background:linear-gradient(135deg,var(--primary),var(--secondary));border-color:var(--primary);color:white;transform:scale(1.05)}
-.time-btn.booked{background:var(--danger-soft);border-color:#fecaca;color:var(--danger);cursor:not-allowed;opacity:0.8}
-.time-btn.booked::after{content:'✕';position:absolute;top:6px;right:8px;font-size:11px;font-weight:900}
-.time-btn.disabled{background:#f1f5f9;border-color:#e2e8f0;color:#cbd5e1;cursor:not-allowed}
-.btn-primary{width:100%;padding:16px;border:none;border-radius:14px;background:linear-gradient(135deg,var(--success),#059669);color:white;font-weight:800;font-size:16px;cursor:pointer;box-shadow:0 4px 14px rgba(16,185,129,0.3);margin-top:8px}
-.btn-primary:disabled{opacity:0.6;cursor:not-allowed}
-.btn-secondary{width:100%;padding:14px;border:2px solid var(--primary);border-radius:14px;background:transparent;color:var(--primary);font-weight:700;font-size:15px;cursor:pointer;margin-top:12px}
-.info{padding:20px 24px;text-align:center;color:var(--text-muted);font-size:13px;border-top:1px solid var(--border);background:var(--bg)}
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);display:none;align-items:center;justify-content:center;z-index:1000;padding:16px}
+
+body{
+  font-family:'Segoe UI',Roboto,'Helvetica Neue',sans-serif;
+  background: var(--dark-bg);
+  background-image: 
+    repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(212, 175, 55, 0.03) 2px, rgba(212, 175, 55, 0.03) 4px),
+    repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(212, 175, 55, 0.03) 2px, rgba(212, 175, 55, 0.03) 4px);
+  min-height:100vh;
+  padding:16px;
+  color:var(--text-light);
+}
+
+.container{max-width:500px;margin:0 auto}
+
+.card{
+  background: var(--card-bg);
+  border-radius:20px;
+  box-shadow:0 20px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(212, 175, 55, 0.1);
+  overflow:hidden;
+  border: 1px solid var(--border-dark);
+}
+
+.header{
+  background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
+  padding:32px 24px;
+  color: var(--text-light);
+  position:relative;
+  overflow:hidden;
+  border-bottom: 2px solid var(--accent-gold);
+}
+
+.header::before{
+  content: '✂';
+  position: absolute;
+  top: -20px;
+  right: -20px;
+  font-size: 180px;
+  opacity: 0.05;
+  transform: rotate(-15deg);
+}
+
+.header h1{
+  font-size:32px;
+  font-weight:900;
+  margin-bottom:8px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--accent-gold);
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+}
+
+.header p{
+  font-size:14px;
+  opacity:0.8;
+  font-weight: 300;
+  letter-spacing: 0.5px;
+}
+
+.form{padding:28px 24px}
+
+.form-group{margin-bottom:24px}
+
+.form-group label{
+  display:block;
+  font-weight:700;
+  margin-bottom:10px;
+  color: var(--accent-gold);
+  font-size:13px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+input[type="text"],input[type="tel"],input[type="date"]{
+  width:100%;
+  padding:16px 18px;
+  border:2px solid var(--border-dark);
+  border-radius:10px;
+  font-size:16px;
+  transition:all 0.3s;
+  background: var(--card-lighter);
+  color: var(--text-light);
+  font-weight: 500;
+}
+
+input[type="text"]::placeholder,
+input[type="tel"]::placeholder{
+  color: var(--text-muted);
+  opacity: 0.6;
+}
+
+input:focus{
+  outline:none;
+  border-color: var(--accent-gold);
+  background: var(--card-bg);
+  box-shadow:0 0 0 4px rgba(212, 175, 55, 0.15);
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  cursor: pointer;
+}
+
+.grid-dates{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+
+.btn-date{
+  padding:16px;
+  border:2px solid var(--border-dark);
+  border-radius:12px;
+  background: var(--card-lighter);
+  color: var(--text-light);
+  font-weight:700;
+  font-size:15px;
+  cursor:pointer;
+  position:relative;
+  overflow:hidden;
+  transition: all 0.3s ease;
+}
+
+.btn-date:hover{
+  border-color: var(--accent-gold);
+  transform: translateY(-2px);
+}
+
+.grid-times{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+
+.time-btn{
+  padding:16px 10px;
+  border:2px solid var(--border-dark);
+  border-radius:10px;
+  background: var(--card-lighter);
+  font-weight:800;
+  font-size:16px;
+  cursor:pointer;
+  position:relative;
+  transition:all 0.2s ease;
+  color: var(--text-light);
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+}
+
+.time-btn:hover:not(.booked):not(.disabled):not(.active){
+  transform:scale(1.05);
+  border-color: var(--accent-gold);
+  background: var(--card-bg);
+  box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+}
+
+.time-btn.active{
+  background: linear-gradient(135deg, var(--accent-gold) 0%, var(--accent-gold-dark) 100%);
+  border-color: var(--accent-gold);
+  color: var(--dark-bg) !important;
+  transform: scale(1.05);
+  box-shadow: 0 6px 20px rgba(212, 175, 55, 0.5), inset 0 1px 0 rgba(255,255,255,0.2);
+  font-weight: 900;
+}
+
+.time-btn.active:hover{
+  color: var(--dark-bg) !important;
+  background: linear-gradient(135deg, var(--accent-gold-dark) 0%, var(--accent-gold) 100%);
+}
+
+.time-btn.booked{
+  background: rgba(231, 76, 60, 0.15);
+  border-color: var(--accent-red);
+  color: var(--danger);
+  cursor:not-allowed;
+  opacity:0.7;
+}
+
+.time-btn.booked::after{
+  content:'✕';
+  position:absolute;
+  top:8px;
+  right:10px;
+  font-size:12px;
+  font-weight:900;
+  color: var(--danger);
+}
+
+.time-btn.disabled{
+  background: rgba(255,255,255,0.05);
+  border-color: #2a2a2a;
+  color: #444;
+  cursor:not-allowed;
+}
+
+.btn-primary{
+  width:100%;
+  padding:18px;
+  border:none;
+  border-radius:12px;
+  background: linear-gradient(135deg, var(--accent-gold) 0%, var(--accent-gold-dark) 100%);
+  color: var(--dark-bg);
+  font-weight:900;
+  font-size:16px;
+  cursor:pointer;
+  box-shadow: 0 6px 20px rgba(212, 175, 55, 0.4);
+  margin-top:12px;
+  transition:all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border: 2px solid var(--accent-gold);
+}
+
+.btn-primary:hover:not(:disabled){
+  transform:translateY(-3px);
+  box-shadow: 0 10px 30px rgba(212, 175, 55, 0.6);
+  background: linear-gradient(135deg, var(--accent-gold-dark) 0%, var(--accent-gold) 100%);
+}
+
+.btn-primary:disabled{
+  opacity:0.4;
+  cursor:not-allowed;
+  transform:none;
+  box-shadow: none;
+}
+
+.btn-secondary{
+  width:100%;
+  padding:16px;
+  border:2px solid var(--accent-gold);
+  border-radius:12px;
+  background:transparent;
+  color: var(--accent-gold);
+  font-weight:700;
+  font-size:15px;
+  cursor:pointer;
+  margin-top:14px;
+  transition:all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.btn-secondary:hover{
+  background: var(--accent-gold);
+  color: var(--dark-bg);
+  transform:translateY(-2px);
+  box-shadow: 0 6px 20px rgba(212, 175, 55, 0.3);
+}
+
+.info{
+  padding:24px;
+  text-align:center;
+  color: var(--text-muted);
+  font-size:13px;
+  border-top:1px solid var(--border-dark);
+  background: rgba(0,0,0,0.3);
+}
+
+.info p{
+  margin:6px 0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  font-weight: 500;
+}
+
+.modal-overlay{
+  position:fixed;
+  inset:0;
+  background: rgba(0,0,0,0.85);
+  backdrop-filter:blur(8px);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:1000;
+  padding:16px;
+  animation:fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn{
+  from{opacity:0}
+  to{opacity:1}
+}
+
 .modal-overlay.show{display:flex}
-.modal{background:white;border-radius:20px;max-width:500px;width:100%;max-height:80vh;overflow:hidden;box-shadow:0 25px 80px rgba(0,0,0,0.3)}
-.modal-header{background:linear-gradient(135deg,var(--primary),var(--secondary));color:white;padding:24px}
-.modal-body{padding:24px;max-height:50vh;overflow:auto}
-.modal-footer{padding:16px 24px;border-top:1px solid var(--border)}
-.btn-close{width:100%;padding:14px;border:none;border-radius:12px;background:var(--primary);color:white;font-weight:700;cursor:pointer}
+
+.modal{
+  background: var(--card-bg);
+  border-radius:20px;
+  max-width:500px;
+  width:100%;
+  max-height:80vh;
+  overflow:hidden;
+  box-shadow: 0 25px 80px rgba(0,0,0,0.8);
+  animation:slideUp 0.3s ease;
+  border: 1px solid var(--border-dark);
+}
+
+@keyframes slideUp{
+  from{transform:translateY(30px);opacity:0}
+  to{transform:translateY(0);opacity:1}
+}
+
+.modal-header{
+  background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
+  color: var(--text-light);
+  padding:28px 24px;
+  border-bottom: 2px solid var(--accent-gold);
+}
+
+.modal-header h2{
+  font-size:26px;
+  margin-bottom:6px;
+  font-weight: 900;
+  color: var(--accent-gold);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.modal-header p{
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.modal-body{
+  padding:24px;
+  max-height:50vh;
+  overflow:auto;
+  background: var(--card-bg);
+}
+
+.modal-body p{
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+.modal-footer{
+  padding:20px 24px;
+  border-top:1px solid var(--border-dark);
+  background: rgba(0,0,0,0.3);
+}
+
+.btn-close{
+  width:100%;
+  padding:16px;
+  border:none;
+  border-radius:12px;
+  background: var(--accent-gold);
+  color: var(--dark-bg);
+  font-weight:900;
+  cursor:pointer;
+  transition:all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-size: 14px;
+}
+
+.btn-close:hover{
+  background: var(--accent-gold-dark);
+  transform:translateY(-2px);
+  box-shadow: 0 6px 20px rgba(212, 175, 55, 0.4);
+}
+
 .hidden{display:none!important}
-@media (max-width:480px){.grid-dates{grid-template-columns:1fr}.grid-times{grid-template-columns:repeat(3,1fr)}}
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--card-lighter);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--accent-gold);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-gold-dark);
+}
+
+@media (max-width:480px){
+  .grid-dates{grid-template-columns:1fr}
+  .grid-times{grid-template-columns:repeat(3,1fr);gap:10px}
+  body{padding:8px}
+  .card{border-radius:16px}
+  .header{padding:24px 20px}
+  .header h1{font-size:26px}
+  .form{padding:20px 16px}
+  .time-btn{padding:14px 8px;font-size:15px}
+  .btn-primary, .btn-secondary{font-size:14px}
+}
 </style>
 </head>
 <body>
@@ -49,7 +412,7 @@ input:focus{outline:none;border-color:var(--primary);background:white;box-shadow
   <div class="card">
     <div class="header">
       <h1>✂️ Барбершоп</h1>
-      <p>Быстрая запись на стрижку онлайн</p>
+      <p>Мужская стрижка • Борода • Стиль</p>
     </div>
 
     <div class="form">
@@ -90,10 +453,7 @@ input:focus{outline:none;border-color:var(--primary);background:white;box-shadow
 </div>
 
 <script>
-/* ---------- ВНИМАНИЕ: вставьте сюда URL вашего Web App (GAS) ---------- */
 const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxUiq9nV4ad9304fe1kG9xge940n_t6EJw3HDenBmcQNIacYid86pr1oDuOgJ6YutIg/exec';
-/* -------------------------------------------------------------------- */
-
 const ALL_SLOTS = ['09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00'];
 
 const nameInput = document.getElementById('nameInput');
@@ -106,13 +466,12 @@ const myBookingsBtn = document.getElementById('myBookingsBtn');
 const modalOverlay = document.getElementById('modalOverlay');
 const modal = document.getElementById('modal');
 
-let bookedSlots = {}; // ключи вида "YYYY-MM-DD_HH:MM" => true
-let userDayBookings = []; // для проверки "одна запись в день"
+let bookedSlots = {};
+let userDayBookings = [];
 let selectedDate = '';
 let selectedTime = '';
 let sending = false;
 
-// --- вспомогательные функции ---
 function isoDate(d){
   const y = d.getFullYear();
   const m = String(d.getMonth()+1).padStart(2,'0');
@@ -123,7 +482,7 @@ function isoDate(d){
 function normalizeTime(timeStr){
   if(!timeStr && timeStr !== 0) return '';
   let s = String(timeStr).trim();
-  if(s.startsWith("'")) s = s.slice(1); // убираем возможный апостроф из GAS
+  if(s.startsWith("'")) s = s.slice(1);
   if(s.includes(':')){
     const p = s.split(':');
     return p[0].padStart(2,'0') + ':' + (p[1]||'00').padStart(2,'0');
@@ -159,11 +518,11 @@ function closeModal(){
   modalOverlay.classList.remove('show');
   setTimeout(()=> modal.innerHTML = '', 300);
 }
+
 function closeModalOnOverlay(e){
   if(e.target === modalOverlay) closeModal();
 }
 
-// --- загрузка записей с сервера ---
 async function loadBookings(){
   try{
     const res = await fetch(GOOGLE_SCRIPT_URL + '?action=getBookings',{cache:'no-store'});
@@ -183,17 +542,13 @@ async function loadBookings(){
           userId: String(b.userId||'')
         });
       });
-    } else {
-      // защита: если нет bookings — не ломаем UI
-      console.warn('loadBookings: unexpected response', json);
     }
     if(selectedDate) renderTimes();
   } catch(err){
-    console.error('Ошибка загрузки записей:', err);
+    // Тихая обработка ошибки
   }
 }
 
-// --- рендер таймов для выбранной даты ---
 function renderTimes(){
   timesGrid.innerHTML = '';
   if(!selectedDate) return;
@@ -201,8 +556,6 @@ function renderTimes(){
   const today = isoDate(now);
   const currentHour = now.getHours();
   const currentMinute = now.getMinutes();
-
-  // Проверка: если выбранная дата в прошлом (строковое сравнение YYYY-MM-DD корректно)
   const isPastDate = selectedDate < today;
 
   ALL_SLOTS.forEach(slot=>{
@@ -212,13 +565,11 @@ function renderTimes(){
     const normalizedSlot = normalizeTime(slot);
     const key = `${selectedDate}_${normalizedSlot}`;
 
-    // Если дата прошла — делаем все слоты занятыми (красными + disabled)
     if (isPastDate) {
       btn.classList.add('booked');
       btn.title = 'Прошедшая дата';
       btn.disabled = true;
     }
-    // занят?
     else if(bookedSlots[key]){
       btn.classList.add('booked');
       btn.title = 'Занято';
@@ -240,19 +591,6 @@ function renderTimes(){
   });
 }
 
-// --- выбор даты ---
-function selectDate(dateStr){
-  selectedDate = dateStr;
-  selectedTime = '';
-  document.querySelectorAll('.btn-date').forEach(b=>b.classList.remove('active'));
-  const dbtn = document.querySelector(`.btn-date[data-date="${dateStr}"]`);
-  if(dbtn) dbtn.classList.add('active');
-  timeBlock.classList.remove('hidden');
-  renderTimes();
-  updateSubmit();
-}
-
-// --- выбор времени ---
 function selectTime(time, btn){
   selectedTime = time;
   document.querySelectorAll('.time-btn').forEach(b=>b.classList.remove('active'));
@@ -260,25 +598,21 @@ function selectTime(time, btn){
   updateSubmit();
 }
 
-// --- валидация формы для активации submit ---
 function updateSubmit(){
   const name = nameInput.value.trim();
   const digits = phoneInput.value.replace(/\D/g,'');
-  // запрещаем submit если дата в прошлом
   const today = isoDate(new Date());
   const isPast = selectedDate && selectedDate < today;
   const ok = name.length>1 && digits.length===11 && selectedDate && selectedTime && !sending && !isPast;
   submitBtn.disabled = !ok;
 }
 
-// --- отправка записи ---
 async function sendBooking(){
   if(sending) return;
   const name = nameInput.value.trim();
   const phone = normalizePhone(phoneInput.value);
   if(!name || !phone || !selectedDate || !selectedTime) return;
 
-  // проверка лимита 1 запись в день (по номеру)
   const conflict = userDayBookings.some(b=>b.date===selectedDate && (b.phone === phone));
   if(conflict){
     showModal(`<div class="modal-header"><h2>⚠️ Лимит записей</h2><p>Вы уже записаны на этот день</p></div>
@@ -287,15 +621,15 @@ async function sendBooking(){
     return;
   }
 
-  // Защита: ещё раз не даём отправлять запись на прошлую дату (вдруг обход)
   const todayStr = isoDate(new Date());
   if (selectedDate < todayStr) {
     showModal(`<div class="modal-header"><h2>❌ Неверная дата</h2><p>Нельзя записаться на прошедшую дату</p></div><div class="modal-footer"><button class="btn-close" onclick="closeModal()">Ок</button></div>`);
     return;
   }
 
-  sending = true; updateSubmit();
-  submitBtn.innerHTML = 'Сохранение...';
+  sending = true; 
+  updateSubmit();
+  submitBtn.textContent = 'Сохранение...';
 
   const params = new URLSearchParams();
   params.append('action','addBooking');
@@ -317,20 +651,18 @@ async function sendBooking(){
     if(data && data.status === 'success'){
       showModal(`<div class="modal-header"><h2>✅ Запись подтверждена!</h2><p>Ждём вас в барбершопе</p></div>
         <div class="modal-body">
-          <div style="padding:12px;border-radius:10px;background:#f8fafc;">
-            <div style="font-weight:800">${formatDateUI(selectedDate)} в ${selectedTime}</div>
-            <div style="margin-top:6px">${name}</div>
-            <div style="margin-top:4px">${phone}</div>
+          <div style="padding:16px;border-radius:12px;background:rgba(212,175,55,0.1);border:1px solid rgba(212,175,55,0.3);">
+            <div style="font-weight:800;font-size:18px;color:#d4af37;margin-bottom:8px">${formatDateUI(selectedDate)} в ${selectedTime}</div>
+            <div style="margin-top:8px;color:#f5f5f5">${name}</div>
+            <div style="margin-top:6px;color:#888">${phone}</div>
           </div>
         </div>
         <div class="modal-footer"><button class="btn-close" onclick="closeModal()">Отлично!</button></div>`);
       await loadBookings();
-      // сброс UI
       selectedDate = '';
       selectedTime = '';
       datePicker.value = '';
       timeBlock.classList.add('hidden');
-      document.querySelectorAll('.btn-date').forEach(b=>b.classList.remove('active'));
       document.querySelectorAll('.time-btn').forEach(b=>b.classList.remove('active'));
     } else {
       const msg = (data && data.message) ? data.message : 'Не удалось создать запись';
@@ -339,16 +671,16 @@ async function sendBooking(){
         <div class="modal-footer"><button class="btn-close" onclick="closeModal()">Закрыть</button></div>`);
     }
   } catch(err){
-    console.error(err);
     showModal(`<div class="modal-header"><h2>❌ Ошибка</h2><p>Не удалось создать запись</p></div>
-      <div class="modal-body"><p>${err.message || ''}</p></div>
+      <div class="modal-body"><p>Проверьте подключение и попробуйте снова</p></div>
       <div class="modal-footer"><button class="btn-close" onclick="closeModal()">Закрыть</button></div>`);
   }
 
-  sending = false; submitBtn.textContent = 'Подтвердить запись'; updateSubmit();
+  sending = false; 
+  submitBtn.textContent = 'Подтвердить запись'; 
+  updateSubmit();
 }
 
-// --- открытие списка "Мои записи" ---
 async function openMyBookings(){
   const phone = normalizePhone(phoneInput.value);
   if(!phone){
@@ -368,11 +700,11 @@ async function openMyBookings(){
       const items = data.bookings
         .sort((a,b) => (a.date + a.time).localeCompare(b.date + b.time))
         .map(b => {
-          return `<div style="padding:12px;border-radius:10px;background:#f8fafc;margin-bottom:10px;">
-            <div style="font-weight:800">${formatDateUI(b.date)} в ${normalizeTime(b.time)}</div>
-            <div style="margin-top:6px">${b.name||''}</div>
-            <div style="margin-top:4px">${normalizePhone(b.phone||'')}</div>
-            ${b.created?`<div style="margin-top:8px;font-size:12px;color:#64748b">Создано: ${b.created}</div>`:''}
+          return `<div style="padding:16px;border-radius:12px;background:rgba(212,175,55,0.1);margin-bottom:12px;border:1px solid rgba(212,175,55,0.3);">
+            <div style="font-weight:800;color:#d4af37;margin-bottom:6px">${formatDateUI(b.date)} в ${normalizeTime(b.time)}</div>
+            <div style="margin-top:6px;color:#f5f5f5">${b.name||''}</div>
+            <div style="margin-top:4px;color:#888">${normalizePhone(b.phone||'')}</div>
+            ${b.created?`<div style="margin-top:10px;font-size:11px;color:#666;border-top:1px solid rgba(255,255,255,0.1);padding-top:8px">Создано: ${b.created}</div>`:''}
           </div>`;
         }).join('');
       showModal(`<div class="modal-header"><h2>📋 Мои записи</h2><p>Всего записей: ${data.bookings.length}</p></div><div class="modal-body">${items}</div><div class="modal-footer"><button class="btn-close" onclick="closeModal()">Закрыть</button></div>`);
@@ -380,12 +712,10 @@ async function openMyBookings(){
       showModal(`<div class="modal-header"><h2>📋 Мои записи</h2><p>Записей не найдено</p></div><div class="modal-body"><p>У вас пока нет активных записей</p></div><div class="modal-footer"><button class="btn-close" onclick="closeModal()">Закрыть</button></div>`);
     }
   } catch(err){
-    console.error(err);
-    showModal(`<div class="modal-header"><h2>❌ Ошибка</h2><p>Не удалось загрузить записи</p></div><div class="modal-body"><p>${err.message||''}</p></div><div class="modal-footer"><button class="btn-close" onclick="closeModal()">Закрыть</button></div>`);
+    showModal(`<div class="modal-header"><h2>❌ Ошибка</h2><p>Не удалось загрузить записи</p></div><div class="modal-body"><p>Проверьте подключение и попробуйте снова</p></div><div class="modal-footer"><button class="btn-close" onclick="closeModal()">Закрыть</button></div>`);
   }
 }
 
-// --- обработчики событий ---
 phoneInput.addEventListener('input',(e)=>{
   let v = e.target.value.replace(/\D/g,'');
   if(!v.startsWith('7')) v = '7'+v.replace(/^7+/,'');
@@ -416,14 +746,15 @@ datePicker.addEventListener('change', (e)=>{
 submitBtn.addEventListener('click', sendBooking);
 myBookingsBtn.addEventListener('click', openMyBookings);
 
-// --- инициализация ---
 (async function init(){
   try {
     const tg = window.Telegram?.WebApp;
-    if(tg){ tg.ready(); if(tg.initDataUnsafe?.user?.first_name) nameInput.value = tg.initDataUnsafe.user.first_name; }
+    if(tg){ 
+      tg.ready(); 
+      if(tg.initDataUnsafe?.user?.first_name) nameInput.value = tg.initDataUnsafe.user.first_name; 
+    }
   } catch(e){}
 
-  // ставим дату по-умолчанию: сегодня и задаём min (чтобы нельзя было выбрать прошлое)
   const today = new Date();
   const todayStr = isoDate(today);
   datePicker.value = todayStr;
