@@ -660,8 +660,11 @@ async function sendBooking(){
   params.append('phone', phone);
   params.append('date', selectedDate);
   params.append('time', selectedTime);
-  params.append('userId','');
-  params.append('username','');
+  
+  const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user || {};
+  params.append('userId', tgUser.id || '');
+  params.append('username', tgUser.username || '');
+
 
   try{
     const res = await fetch(GOOGLE_SCRIPT_URL, {
